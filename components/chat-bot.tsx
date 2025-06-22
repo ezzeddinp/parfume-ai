@@ -14,11 +14,35 @@ interface ChatBotProps {
 
 export default function ChatBot({ isChatOpen, setIsChatOpen }: ChatBotProps) {
   const [isMobile, setIsMobile] = useState(false)
-  const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat({
+
+  const { messages, input, handleInputChange, handleSubmit, isLoading, error } = useChat({
     api: "/api/chat",
+    onError: (error) => {
+      console.error("❌ Chat Error:", error)
+    },
+    onFinish: (message) => {
+      console.log("✅ Message finished:", message)
+    },
   })
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
+
+  // Debug: Log messages changes
+  useEffect(() => {
+    console.log("📝 Messages updated:", messages)
+  }, [messages])
+
+  // Debug: Log loading state
+  useEffect(() => {
+    console.log("⏳ Loading state:", isLoading)
+  }, [isLoading])
+
+  // Debug: Log errors
+  useEffect(() => {
+    if (error) {
+      console.error("💥 Frontend Error:", error)
+    }
+  }, [error])
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
@@ -79,7 +103,7 @@ export default function ChatBot({ isChatOpen, setIsChatOpen }: ChatBotProps) {
                     transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
                   >
                     <span className="w-2 h-2 bg-blue-400 rounded-full mr-1"></span>
-                    Siap Membantu
+                    {isLoading ? "Thinking..." : "Siap Membantu"}
                   </motion.p>
                 </div>
               </div>
@@ -97,6 +121,13 @@ export default function ChatBot({ isChatOpen, setIsChatOpen }: ChatBotProps) {
 
             {/* Messages */}
             <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 custom-scrollbar">
+              {/* Debug Info */}
+              {error && (
+                <div className="bg-red-900/50 border border-red-500/50 rounded-lg p-3 text-red-200 text-sm">
+                  <strong>Error:</strong> {error.message}
+                </div>
+              )}
+
               <AnimatePresence>
                 {messages.length === 0 && (
                   <motion.div
@@ -140,7 +171,7 @@ export default function ChatBot({ isChatOpen, setIsChatOpen }: ChatBotProps) {
                         "Ceritakan tentang woody scents",
                       ].map((suggestion, index) => (
                         <motion.button
-                          key={index}
+                          key={`suggestion-${suggestion}`}
                           className="block w-full text-left text-xs bg-gradient-to-r from-blue-900/30 to-black/30 text-blue-300 px-3 py-2 rounded-full border border-blue-700/30 hover:border-blue-500/50 transition-colors"
                           whileHover={{ scale: 1.02, x: 5 }}
                           whileTap={{ scale: 0.98 }}
@@ -156,9 +187,16 @@ export default function ChatBot({ isChatOpen, setIsChatOpen }: ChatBotProps) {
                   </motion.div>
                 )}
 
+                {/* Debug: Show message count */}
+                {messages.length > 0 && (
+                  <div className="text-xs text-gray-500 text-center mb-4">
+                    Messages: {messages.length} | Loading: {isLoading ? "Yes" : "No"}
+                  </div>
+                )}
+
                 {messages.map((message, index) => (
                   <motion.div
-                    key={message.id}
+                    key={`message-${message.id || index}`}
                     initial={{ opacity: 0, y: 20, scale: 0.95 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     transition={{ duration: 0.3 }}
@@ -194,7 +232,11 @@ export default function ChatBot({ isChatOpen, setIsChatOpen }: ChatBotProps) {
                         layout
                       >
                         <div className="text-sm whitespace-pre-wrap leading-relaxed relative z-10">
-                          {message.content}
+                          {message.content || "No content"}
+                        </div>
+                        {/* Debug: Show message details */}
+                        <div className="text-xs opacity-50 mt-1">
+                          Role: {message.role} | ID: {message.id?.slice(0, 8)}
                         </div>
                       </motion.div>
                     </div>
@@ -225,7 +267,7 @@ export default function ChatBot({ isChatOpen, setIsChatOpen }: ChatBotProps) {
                         <div className="flex space-x-1">
                           {[0, 1, 2].map((i) => (
                             <motion.div
-                              key={i}
+                              key={`loading-dot-${i}`}
                               className="w-1.5 h-1.5 md:w-2 md:h-2 bg-blue-400 rounded-full"
                               animate={{
                                 scale: [1, 1.5, 1],

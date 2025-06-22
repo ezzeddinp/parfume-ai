@@ -4,11 +4,31 @@ import { streamText } from "ai"
 export const maxDuration = 30
 
 export async function POST(req: Request) {
-  const { messages } = await req.json()
+  try {
+    console.log("🚀 API Chat endpoint called")
 
-  const result = streamText({
-    model: openai("gpt-4o"),
-    system: `You are an expert perfume consultant and fragrance specialist with extensive knowledge about:
+    const { messages } = await req.json()
+    console.log("📝 Messages received:", messages)
+
+    // Check if API key exists
+    if (!process.env.OPENAI_API_KEY) {
+      console.error("❌ OPENAI_API_KEY not found")
+      return new Response(
+        JSON.stringify({
+          error: "OpenAI API key not configured",
+        }),
+        {
+          status: 500,
+          headers: { "Content-Type": "application/json" },
+        },
+      )
+    }
+
+    console.log("🔑 API Key found, calling OpenAI...")
+
+    const result = streamText({
+      model: openai("gpt-4o"),
+      system: `You are an expert perfume consultant and fragrance specialist with extensive knowledge about:
 
 - Fragrance families (floral, oriental, woody, fresh, etc.)
 - Perfume notes (top, middle, base notes)
@@ -30,8 +50,25 @@ Your role is to:
 - Discuss fragrance trends and new releases
 
 Always be enthusiastic, knowledgeable, and helpful. Ask follow-up questions to better understand the user's preferences when making recommendations. Keep responses conversational and engaging while being informative.`,
-    messages,
-  })
+      messages,
+      onFinish: (result) => {
+        console.log("✅ AI Response completed:", result.text.slice(0, 100) + "...")
+      },
+    })
 
-  return result.toDataStreamResponse()
+    console.log("📤 Sending response stream...")
+    return result.toDataStreamResponse()
+  } catch (error) {
+    console.error("💥 API Error:", error)
+    return new Response(
+      JSON.stringify({
+        error: "Failed to process request",
+        details: error instanceof Error ? error.message : "Unknown error",
+      }),
+      {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      },
+    )
+  }
 }
