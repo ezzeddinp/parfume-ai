@@ -171,7 +171,7 @@ export default function ChatBot({ isChatOpen, setIsChatOpen }: ChatBotProps) {
                         "Ceritakan tentang woody scents",
                       ].map((suggestion, index) => (
                         <motion.button
-                          key={index}
+                          key={`suggestion-${suggestion}`}
                           className="block w-full text-left text-xs bg-gradient-to-r from-blue-900/30 to-black/30 text-blue-300 px-3 py-2 rounded-full border border-blue-700/30 hover:border-blue-500/50 transition-colors"
                           whileHover={{ scale: 1.02, x: 5 }}
                           whileTap={{ scale: 0.98 }}
@@ -196,7 +196,7 @@ export default function ChatBot({ isChatOpen, setIsChatOpen }: ChatBotProps) {
 
                 {messages.map((message, index) => (
                   <motion.div
-                    key={message.id}
+                    key={`message-${message.id || index}`}
                     initial={{ opacity: 0, y: 20, scale: 0.95 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     transition={{ duration: 0.3 }}
@@ -267,7 +267,7 @@ export default function ChatBot({ isChatOpen, setIsChatOpen }: ChatBotProps) {
                         <div className="flex space-x-1">
                           {[0, 1, 2].map((i) => (
                             <motion.div
-                              key={i}
+                              key={`loading-dot-${i}`}
                               className="w-1.5 h-1.5 md:w-2 md:h-2 bg-blue-400 rounded-full"
                               animate={{
                                 scale: [1, 1.5, 1],
