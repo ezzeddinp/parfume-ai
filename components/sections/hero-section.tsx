@@ -68,7 +68,7 @@ export default function HeroSection({ onChatOpen }: HeroSectionProps) {
                   transition={{ duration: 0.8, ease: "easeOut" }}
                 >
                   <span className="bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent block">
-                    DISCOVER
+                    TEMUKAN
                   </span>
                   <span className="bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent block">
                     PERFECTION
@@ -78,12 +78,11 @@ export default function HeroSection({ onChatOpen }: HeroSectionProps) {
 
               <motion.div variants={itemVariants} className="max-w-4xl mx-auto">
                 <p className="text-xl md:text-2xl text-gray-300 mb-4 font-light leading-relaxed">
-                  Experience the <span className="text-blue-400 font-semibold">future of fragrance</span> with our
-                  revolutionary AI technology
+                  Rasakan <span className="text-blue-400 font-semibold">masa depan fragrance</span> dengan teknologi AI
+                  revolusioner kami
                 </p>
                 <p className="text-lg text-gray-400 max-w-2xl mx-auto">
-                  Get personalized recommendations from our collection of 1000+ premium fragrances, curated by AI
-                  experts
+                  Dapatkan rekomendasi personal dari koleksi 1000+ premium fragrances, dikurasi oleh AI experts
                 </p>
               </motion.div>
 
@@ -97,7 +96,7 @@ export default function HeroSection({ onChatOpen }: HeroSectionProps) {
                     className="bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900 text-white px-10 py-6 text-xl font-semibold rounded-full shadow-xl border border-blue-500/20"
                   >
                     <Zap className="mr-3 h-6 w-6" />
-                    Start AI Consultation
+                    Mulai AI Consultation
                     <ChevronRight className="ml-3 h-6 w-6" />
                   </Button>
                 </motion.div>
@@ -117,8 +116,8 @@ export default function HeroSection({ onChatOpen }: HeroSectionProps) {
               <motion.div variants={itemVariants} className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto">
                 {[
                   { icon: Shield, text: "100% Authentic", color: "text-blue-400" },
-                  { icon: Truck, text: "Free Shipping", color: "text-blue-400" },
-                  { icon: RefreshCw, text: "30-Day Returns", color: "text-blue-400" },
+                  { icon: Truck, text: "Gratis Ongkir", color: "text-blue-400" },
+                  { icon: RefreshCw, text: "30-Hari Return", color: "text-blue-400" },
                   { icon: Award, text: "Award Winning", color: "text-blue-400" },
                 ].map((item, index) => (
                   <motion.div

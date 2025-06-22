@@ -11,60 +11,60 @@ const horizontalProducts = [
     id: 1,
     name: "Urban Legend",
     brand: "Metropolitan",
-    price: "Rp. 85",
+    price: "Rp 850.000",
     image: "/placeholder.svg?height=200&width=150",
     description: "Bold and contemporary scent for the modern urbanite",
-    recommendation: "Perfect for young professionals and city dwellers",
+    recommendation: "Perfect untuk young professionals dan city dwellers",
     customerType: "Urban Professionals",
   },
   {
     id: 2,
     name: "Sunset Dreams",
     brand: "Golden Hour",
-    price: "Rp. 110",
+    price: "Rp 1.100.000",
     image: "/placeholder.svg?height=200&width=150",
     description: "Warm and inviting fragrance that captures golden moments",
-    recommendation: "Ideal for romantic evenings and special occasions",
+    recommendation: "Ideal untuk romantic evenings dan special occasions",
     customerType: "Romantic Souls",
   },
   {
     id: 3,
     name: "Forest Whisper",
     brand: "Nature's Call",
-    price: "Rp. 95",
+    price: "Rp 950.000",
     image: "/placeholder.svg?height=200&width=150",
     description: "Fresh woody scent inspired by morning forest walks",
-    recommendation: "Great for nature lovers and outdoor enthusiasts",
+    recommendation: "Great untuk nature lovers dan outdoor enthusiasts",
     customerType: "Nature Enthusiasts",
   },
   {
     id: 4,
     name: "Velvet Night",
     brand: "Midnight Collection",
-    price: "Rp. 140",
+    price: "Rp 1.400.000",
     image: "/placeholder.svg?height=200&width=150",
     description: "Sophisticated evening fragrance with mysterious allure",
-    recommendation: "Perfect for elegant dinners and formal events",
+    recommendation: "Perfect untuk elegant dinners dan formal events",
     customerType: "Sophisticated Elite",
   },
   {
     id: 5,
     name: "Crystal Clear",
     brand: "Pure Essence",
-    price: "Rp. 75",
+    price: "Rp 750.000",
     image: "/placeholder.svg?height=200&width=150",
     description: "Clean and refreshing scent for everyday confidence",
-    recommendation: "Excellent for minimalists and clean scent lovers",
+    recommendation: "Excellent untuk minimalists dan clean scent lovers",
     customerType: "Minimalist Lifestyle",
   },
   {
     id: 6,
     name: "Spice Route",
     brand: "Oriental Treasures",
-    price: "Rp. 125",
+    price: "Rp 1.250.000",
     image: "/placeholder.svg?height=200&width=150",
     description: "Exotic spicy blend with warm oriental notes",
-    recommendation: "Ideal for adventurous spirits and spice enthusiasts",
+    recommendation: "Ideal untuk adventurous spirits dan spice enthusiasts",
     customerType: "Adventure Seekers",
   },
 ]
@@ -95,7 +95,7 @@ export default function HorizontalProducts() {
             initial={{ opacity: 0, y: 30 }}
             animate={horizontalInView ? { opacity: 1, y: 0 } : {}}
           >
-            CURATED FOR YOU
+            DIPILIH UNTUK ANDA
           </motion.h3>
           <motion.p
             className="text-xl text-gray-400 max-w-2xl mx-auto"
@@ -103,7 +103,7 @@ export default function HorizontalProducts() {
             animate={horizontalInView ? { opacity: 1 } : {}}
             transition={{ delay: 0.3 }}
           >
-            Discover fragrances tailored to different personalities and lifestyles
+            Temukan fragrances yang disesuaikan dengan berbagai kepribadian dan gaya hidup
           </motion.p>
         </motion.div>
 

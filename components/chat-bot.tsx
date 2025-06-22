@@ -35,6 +35,19 @@ export default function ChatBot({ isChatOpen, setIsChatOpen }: ChatBotProps) {
     return () => window.removeEventListener("resize", checkMobile)
   }, [])
 
+  // Prevent body scroll when chat is open on mobile
+  useEffect(() => {
+    if (isChatOpen && isMobile) {
+      document.body.style.overflow = "hidden"
+    } else {
+      document.body.style.overflow = "unset"
+    }
+
+    return () => {
+      document.body.style.overflow = "unset"
+    }
+  }, [isChatOpen, isMobile])
+
   return (
     <AnimatePresence>
       {isChatOpen && (
@@ -43,28 +56,30 @@ export default function ChatBot({ isChatOpen, setIsChatOpen }: ChatBotProps) {
           animate={{ scale: 1, opacity: 1, y: 0 }}
           exit={{ scale: 0, opacity: 0, y: 100 }}
           transition={{ type: "spring", stiffness: 300, damping: 30 }}
-          className={`fixed z-90 ${isMobile ? "inset-4 top-20" : "bottom-8 right-8 w-96 h-[600px]"}`}
+          className={`fixed z-[9997] chatbot-container ${
+            isMobile ? "inset-0 chatbot-mobile" : "bottom-8 right-8 w-96 h-[600px] chatbot-desktop"
+          }`}
         >
           <div className="bg-gradient-to-b from-gray-900/95 to-black/95 backdrop-blur-xl border border-gray-700/50 rounded-3xl shadow-2xl w-full h-full flex flex-col overflow-hidden">
             <motion.div
-              className="flex items-center justify-between p-6 border-b border-gray-700/50 bg-gradient-to-r from-blue-900/20 to-black/20"
+              className="flex items-center justify-between p-4 md:p-6 border-b border-gray-700/50 bg-gradient-to-r from-blue-900/20 to-black/20"
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
             >
               <div className="flex items-center space-x-3">
                 <div className="bg-gradient-to-r from-blue-600 to-blue-800 rounded-full p-2">
-                  <Sparkles className="h-5 w-5 text-white" />
+                  <Sparkles className="h-4 w-4 md:h-5 md:w-5 text-white" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-white text-lg">Perfume AI Expert</h3>
+                  <h3 className="font-bold text-white text-base md:text-lg">AI Perfume Expert</h3>
                   <motion.p
                     className="text-xs text-blue-400 flex items-center"
                     animate={{ opacity: [1, 0.5, 1] }}
                     transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
                   >
                     <span className="w-2 h-2 bg-blue-400 rounded-full mr-1"></span>
-                    Online
+                    Siap Membantu
                   </motion.p>
                 </div>
               </div>
@@ -73,21 +88,21 @@ export default function ChatBot({ isChatOpen, setIsChatOpen }: ChatBotProps) {
                   variant="ghost"
                   size="sm"
                   onClick={() => setIsChatOpen(false)}
-                  className="text-gray-400 hover:text-white hover:bg-gray-800/50 rounded-full"
+                  className="text-gray-400 hover:text-white hover:bg-gray-800/50 rounded-full p-2"
                 >
-                  <X className="h-5 w-5" />
+                  <X className="h-4 w-4 md:h-5 md:w-5" />
                 </Button>
               </motion.div>
             </motion.div>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar">
+            <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 custom-scrollbar">
               <AnimatePresence>
                 {messages.length === 0 && (
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="text-center text-gray-400 py-12"
+                    className="text-center text-gray-400 py-8 md:py-12"
                   >
                     <motion.div
                       animate={{
@@ -98,31 +113,31 @@ export default function ChatBot({ isChatOpen, setIsChatOpen }: ChatBotProps) {
                         rotate: { duration: 8, repeat: Number.POSITIVE_INFINITY, ease: "linear" },
                         scale: { duration: 2, repeat: Number.POSITIVE_INFINITY },
                       }}
-                      className="mb-6"
+                      className="mb-4 md:mb-6"
                     >
-                      <Bot className="h-16 w-16 mx-auto text-blue-400" />
+                      <Bot className="h-12 w-12 md:h-16 md:w-16 mx-auto text-blue-400" />
                     </motion.div>
                     <motion.p
-                      className="text-sm leading-relaxed"
+                      className="text-sm leading-relaxed px-2"
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       transition={{ delay: 0.5 }}
                     >
-                      Hello! I'm your AI perfume expert. Ask me about fragrances, get personalized recommendations, or
-                      learn about different scent families!
+                      Halo! Saya AI expert parfum Anda. Tanyakan tentang fragrance, dapatkan rekomendasi personal, atau
+                      pelajari tentang scent families!
                     </motion.p>
 
                     {/* Suggested Questions */}
                     <motion.div
-                      className="mt-6 space-y-2"
+                      className="mt-4 md:mt-6 space-y-2"
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.8 }}
                     >
                       {[
-                        "What's a good perfume for summer?",
-                        "Recommend a romantic fragrance",
-                        "Tell me about woody scents",
+                        "Parfum yang cocok untuk musim panas?",
+                        "Recommend romantic fragrance",
+                        "Ceritakan tentang woody scents",
                       ].map((suggestion, index) => (
                         <motion.button
                           key={index}
@@ -150,12 +165,12 @@ export default function ChatBot({ isChatOpen, setIsChatOpen }: ChatBotProps) {
                     className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
                   >
                     <div
-                      className={`flex items-start space-x-3 max-w-[85%] ${
+                      className={`flex items-start space-x-2 md:space-x-3 max-w-[85%] ${
                         message.role === "user" ? "flex-row-reverse space-x-reverse" : ""
                       }`}
                     >
                       <motion.div
-                        className={`rounded-full p-2 ${
+                        className={`rounded-full p-1.5 md:p-2 flex-shrink-0 ${
                           message.role === "user"
                             ? "bg-gradient-to-r from-blue-600 to-blue-800"
                             : "bg-gradient-to-r from-gray-700 to-gray-800"
@@ -163,14 +178,14 @@ export default function ChatBot({ isChatOpen, setIsChatOpen }: ChatBotProps) {
                         whileHover={{ scale: 1.1 }}
                       >
                         {message.role === "user" ? (
-                          <User className="h-4 w-4 text-white" />
+                          <User className="h-3 w-3 md:h-4 md:w-4 text-white" />
                         ) : (
-                          <Bot className="h-4 w-4 text-blue-400" />
+                          <Bot className="h-3 w-3 md:h-4 md:w-4 text-blue-400" />
                         )}
                       </motion.div>
 
                       <motion.div
-                        className={`rounded-2xl p-4 relative overflow-hidden ${
+                        className={`rounded-2xl p-3 md:p-4 relative overflow-hidden ${
                           message.role === "user"
                             ? "bg-gradient-to-r from-blue-600 to-blue-800 text-white"
                             : "bg-gradient-to-r from-gray-800/80 to-gray-900/80 text-gray-100 backdrop-blur-sm border border-gray-700/30"
@@ -192,9 +207,9 @@ export default function ChatBot({ isChatOpen, setIsChatOpen }: ChatBotProps) {
                     animate={{ opacity: 1, y: 0 }}
                     className="flex justify-start"
                   >
-                    <div className="flex items-start space-x-3 max-w-[85%]">
+                    <div className="flex items-start space-x-2 md:space-x-3 max-w-[85%]">
                       <motion.div
-                        className="bg-gradient-to-r from-gray-700 to-gray-800 rounded-full p-2"
+                        className="bg-gradient-to-r from-gray-700 to-gray-800 rounded-full p-1.5 md:p-2"
                         animate={{
                           scale: [1, 1.1, 1],
                           rotate: [0, 360],
@@ -204,14 +219,14 @@ export default function ChatBot({ isChatOpen, setIsChatOpen }: ChatBotProps) {
                           rotate: { duration: 2, repeat: Number.POSITIVE_INFINITY, ease: "linear" },
                         }}
                       >
-                        <Bot className="h-4 w-4 text-blue-400" />
+                        <Bot className="h-3 w-3 md:h-4 md:w-4 text-blue-400" />
                       </motion.div>
-                      <div className="bg-gradient-to-r from-gray-800/80 to-gray-900/80 backdrop-blur-sm border border-gray-700/30 rounded-2xl p-4">
+                      <div className="bg-gradient-to-r from-gray-800/80 to-gray-900/80 backdrop-blur-sm border border-gray-700/30 rounded-2xl p-3 md:p-4">
                         <div className="flex space-x-1">
                           {[0, 1, 2].map((i) => (
                             <motion.div
                               key={i}
-                              className="w-2 h-2 bg-blue-400 rounded-full"
+                              className="w-1.5 h-1.5 md:w-2 md:h-2 bg-blue-400 rounded-full"
                               animate={{
                                 scale: [1, 1.5, 1],
                                 opacity: [0.5, 1, 0.5],
@@ -235,18 +250,18 @@ export default function ChatBot({ isChatOpen, setIsChatOpen }: ChatBotProps) {
 
             {/* Enhanced Input */}
             <motion.div
-              className="border-t border-gray-700/50 p-4 bg-gradient-to-r from-gray-900/50 to-black/50 backdrop-blur-sm"
+              className="border-t border-gray-700/50 p-3 md:p-4 bg-gradient-to-r from-gray-900/50 to-black/50 backdrop-blur-sm"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
             >
-              <form onSubmit={handleSubmit} className="flex space-x-3">
+              <form onSubmit={handleSubmit} className="flex space-x-2 md:space-x-3">
                 <div className="flex-1 relative">
                   <Input
                     value={input}
                     onChange={handleInputChange}
-                    placeholder="Ask about perfumes..."
-                    className="bg-gray-800/50 border-gray-600/50 text-white placeholder-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 rounded-full px-4 py-3 pr-12 backdrop-blur-sm"
+                    placeholder="Tanyakan tentang parfum..."
+                    className="bg-gray-800/50 border-gray-600/50 text-white placeholder-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 rounded-full px-4 py-2 md:py-3 pr-10 md:pr-12 backdrop-blur-sm text-sm md:text-base"
                     disabled={isLoading}
                   />
                   {input && (
@@ -255,7 +270,7 @@ export default function ChatBot({ isChatOpen, setIsChatOpen }: ChatBotProps) {
                       animate={{ scale: 1 }}
                       className="absolute right-3 top-1/2 transform -translate-y-1/2"
                     >
-                      <Sparkles className="h-4 w-4 text-blue-400" />
+                      <Sparkles className="h-3 w-3 md:h-4 md:w-4 text-blue-400" />
                     </motion.div>
                   )}
                 </div>
@@ -264,9 +279,9 @@ export default function ChatBot({ isChatOpen, setIsChatOpen }: ChatBotProps) {
                   <Button
                     type="submit"
                     disabled={isLoading || !input.trim()}
-                    className="bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900 text-white rounded-full p-3 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden"
+                    className="bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900 text-white rounded-full p-2 md:p-3 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden"
                   >
-                    <Send className="h-4 w-4 relative z-10" />
+                    <Send className="h-3 w-3 md:h-4 md:w-4 relative z-10" />
                   </Button>
                 </motion.div>
               </form>
