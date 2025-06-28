@@ -27,23 +27,6 @@ export default function ChatBot({ isChatOpen, setIsChatOpen }: ChatBotProps) {
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
-  // Debug: Log messages changes
-  useEffect(() => {
-    console.log("📝 Messages updated:", messages)
-  }, [messages])
-
-  // Debug: Log loading state
-  useEffect(() => {
-    console.log("⏳ Loading state:", isLoading)
-  }, [isLoading])
-
-  // Debug: Log errors
-  useEffect(() => {
-    if (error) {
-      console.error("💥 Frontend Error:", error)
-    }
-  }, [error])
-
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }
@@ -134,7 +117,7 @@ export default function ChatBot({ isChatOpen, setIsChatOpen }: ChatBotProps) {
 
             {/* Messages */}
             <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 custom-scrollbar">
-              {/* Debug Info */}
+              {/* Error Display */}
               {error && (
                 <div className="bg-red-900/50 border border-red-500/50 rounded-lg p-3 text-red-200 text-sm">
                   <strong>Error:</strong> {error.message}
@@ -181,7 +164,7 @@ export default function ChatBot({ isChatOpen, setIsChatOpen }: ChatBotProps) {
                       <p className="text-xs text-gray-500 mb-3">Coba tanyakan:</p>
                       {suggestedQuestions.map((suggestion, index) => (
                         <motion.button
-                          key={`suggestion-${suggestion}`}
+                          key={`suggestion-${index}`}
                           className="block w-full text-left text-xs bg-gradient-to-r from-blue-900/30 to-purple-900/30 text-blue-300 px-3 py-2 rounded-full border border-blue-700/30 hover:border-blue-500/50 transition-colors"
                           whileHover={{ scale: 1.02, x: 5 }}
                           whileTap={{ scale: 0.98 }}
@@ -192,13 +175,6 @@ export default function ChatBot({ isChatOpen, setIsChatOpen }: ChatBotProps) {
                       ))}
                     </motion.div>
                   </motion.div>
-                )}
-
-                {/* Debug: Show message count */}
-                {messages.length > 0 && (
-                  <div className="text-xs text-gray-500 text-center mb-4">
-                    Messages: {messages.length} | Loading: {isLoading ? "Yes" : "No"}
-                  </div>
                 )}
 
                 {messages.map((message, index) => (
@@ -239,7 +215,7 @@ export default function ChatBot({ isChatOpen, setIsChatOpen }: ChatBotProps) {
                         layout
                       >
                         <div className="text-sm whitespace-pre-wrap leading-relaxed relative z-10">
-                          {message.content || "No content"}
+                          {message.content}
                         </div>
                       </motion.div>
                     </div>
@@ -293,7 +269,7 @@ export default function ChatBot({ isChatOpen, setIsChatOpen }: ChatBotProps) {
               <div ref={messagesEndRef} />
             </div>
 
-            {/* Enhanced Input */}
+            {/* Input */}
             <motion.div
               className="border-t border-gray-700/50 p-3 md:p-4 bg-gradient-to-r from-gray-900/50 to-black/50 backdrop-blur-sm"
               initial={{ opacity: 0, y: 20 }}
