@@ -1,11 +1,10 @@
 "use client"
-
 import { useChat } from "ai/react"
+import { motion, AnimatePresence } from "framer-motion"
+import { X, Send, Bot, User, Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Send, Bot, User, Sparkles, X } from "lucide-react"
-import { useEffect, useRef, useState } from "react"
-import { motion, AnimatePresence } from "framer-motion"
+import { ScrollArea } from "@/components/ui/scroll-area"
 
 interface ChatBotProps {
   isChatOpen: boolean
@@ -13,250 +12,138 @@ interface ChatBotProps {
 }
 
 export default function ChatBot({ isChatOpen, setIsChatOpen }: ChatBotProps) {
-  const [isMobile, setIsMobile] = useState(false)
-
-  const { messages, input, handleInputChange, handleSubmit, isLoading, error } = useChat({
+  const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat({
     api: "/api/chat",
-    onError: (error) => {
-      console.error("❌ Chat Error:", error)
-    },
-    onFinish: (message) => {
-      console.log("✅ Message finished:", message)
-    },
   })
 
-  const messagesEndRef = useRef<HTMLDivElement>(null)
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
-  }
-
-  useEffect(() => {
-    scrollToBottom()
-  }, [messages])
-
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768)
-    checkMobile()
-    window.addEventListener("resize", checkMobile)
-    return () => window.removeEventListener("resize", checkMobile)
-  }, [])
-
-  // Prevent body scroll when chat is open on mobile
-  useEffect(() => {
-    if (isChatOpen && isMobile) {
-      document.body.style.overflow = "hidden"
-    } else {
-      document.body.style.overflow = "unset"
-    }
-
-    return () => {
-      document.body.style.overflow = "unset"
-    }
-  }, [isChatOpen, isMobile])
-
   const suggestedQuestions = [
-    "Parfum yang cocok untuk musim panas?",
-    "Recommend romantic fragrance",
-    "Ceritakan tentang woody scents",
-    "Tips agar parfum tahan lama",
+    "What's a good perfume for summer?",
+    "Recommend a romantic fragrance",
+    "Best long-lasting perfumes?",
+    "Perfume for office wear?",
   ]
-
-  const handleSuggestionClick = (suggestion: string) => {
-    const event = { target: { value: suggestion } } as any
-    handleInputChange(event)
-  }
 
   return (
     <AnimatePresence>
       {isChatOpen && (
-        <motion.div
-          initial={{ scale: 0, opacity: 0, y: 100 }}
-          animate={{ scale: 1, opacity: 1, y: 0 }}
-          exit={{ scale: 0, opacity: 0, y: 100 }}
-          transition={{ type: "spring", stiffness: 300, damping: 30 }}
-          className={`fixed z-[9997] chatbot-container ${
-            isMobile ? "inset-0 chatbot-mobile" : "bottom-4 right-4 w-96 h-[600px] chatbot-desktop"
-          }`}
-        >
-          <div className="bg-gradient-to-b from-gray-900/95 to-black/95 backdrop-blur-xl border border-gray-700/50 rounded-3xl shadow-2xl w-full h-full flex flex-col overflow-hidden">
+        <>
+          {/* Mobile Overlay */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 md:hidden"
+            onClick={() => setIsChatOpen(false)}
+          />
+
+          {/* Chat Container */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+            transition={{ duration: 0.2 }}
+            className="fixed bottom-4 right-4 w-full max-w-md h-[600px] md:w-96 bg-gradient-to-b from-gray-900/95 to-black/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl shadow-2xl z-50 flex flex-col overflow-hidden"
+          >
             {/* Header */}
-            <motion.div
-              className="flex items-center justify-between p-4 md:p-6 border-b border-gray-700/50 bg-gradient-to-r from-blue-900/20 to-purple-900/20"
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-            >
+            <div className="flex items-center justify-between p-4 border-b border-gray-700/50 bg-gradient-to-r from-blue-600/20 to-purple-600/20">
               <div className="flex items-center space-x-3">
-                <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-full p-2">
-                  <Sparkles className="h-4 w-4 md:h-5 md:w-5 text-white" />
+                <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center">
+                  <Sparkles className="w-4 h-4 text-white" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-white text-base md:text-lg">AI Perfume Expert</h3>
-                  <motion.p
-                    className="text-xs text-blue-400 flex items-center"
-                    animate={{ opacity: [1, 0.5, 1] }}
-                    transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
-                  >
-                    <span className="w-2 h-2 bg-blue-400 rounded-full mr-1"></span>
-                    {isLoading ? "Thinking..." : "Siap Membantu"}
-                  </motion.p>
+                  <h3 className="font-semibold text-white">Perfume AI</h3>
+                  <p className="text-xs text-gray-400">Your fragrance expert</p>
                 </div>
               </div>
-              <motion.div whileHover={{ scale: 1.1, rotate: 90 }} whileTap={{ scale: 0.9 }}>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setIsChatOpen(false)}
-                  className="text-gray-400 hover:text-white hover:bg-gray-800/50 rounded-full p-2"
-                >
-                  <X className="h-4 w-4 md:h-5 md:w-5" />
-                </Button>
-              </motion.div>
-            </motion.div>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsChatOpen(false)}
+                className="text-gray-400 hover:text-white hover:bg-gray-700/50"
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 custom-scrollbar">
-              {/* Error Display */}
-              {error && (
-                <div className="bg-red-900/50 border border-red-500/50 rounded-lg p-3 text-red-200 text-sm">
-                  <strong>Error:</strong> {error.message}
-                </div>
-              )}
-
-              <AnimatePresence>
+            <ScrollArea className="flex-1 p-4">
+              <div className="space-y-4">
                 {messages.length === 0 && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="text-center text-gray-400 py-8 md:py-12"
-                  >
-                    <motion.div
-                      animate={{
-                        rotate: [0, 360],
-                        scale: [1, 1.1, 1],
-                      }}
-                      transition={{
-                        rotate: { duration: 8, repeat: Number.POSITIVE_INFINITY, ease: "linear" },
-                        scale: { duration: 2, repeat: Number.POSITIVE_INFINITY },
-                      }}
-                      className="mb-4 md:mb-6"
-                    >
-                      <Bot className="h-12 w-12 md:h-16 md:w-16 mx-auto text-blue-400" />
-                    </motion.div>
-                    <motion.p
-                      className="text-sm leading-relaxed px-2 mb-6"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: 0.5 }}
-                    >
-                      Halo! Saya AI expert parfum Anda. Tanyakan tentang fragrance, dapatkan rekomendasi personal, atau
-                      pelajari tentang scent families!
-                    </motion.p>
-
-                    {/* Suggested Questions */}
-                    <motion.div
-                      className="space-y-2"
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.8 }}
-                    >
-                      <p className="text-xs text-gray-500 mb-3">Coba tanyakan:</p>
-                      {suggestedQuestions.map((suggestion, index) => (
-                        <motion.button
-                          key={`suggestion-${index}`}
-                          className="block w-full text-left text-xs bg-gradient-to-r from-blue-900/30 to-purple-900/30 text-blue-300 px-3 py-2 rounded-full border border-blue-700/30 hover:border-blue-500/50 transition-colors"
-                          whileHover={{ scale: 1.02, x: 5 }}
-                          whileTap={{ scale: 0.98 }}
-                          onClick={() => handleSuggestionClick(suggestion)}
+                  <div className="text-center py-8">
+                    <Bot className="w-12 h-12 text-blue-400 mx-auto mb-4" />
+                    <h4 className="text-lg font-semibold text-white mb-2">Welcome to Perfume AI!</h4>
+                    <p className="text-gray-400 text-sm mb-6">
+                      I'm here to help you find your perfect fragrance. Ask me anything about perfumes!
+                    </p>
+                    <div className="grid grid-cols-1 gap-2">
+                      {suggestedQuestions.map((question) => (
+                        <Button
+                          key={`suggestion-${question}`}
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            handleInputChange({ target: { value: question } } as any)
+                            handleSubmit({ preventDefault: () => {} } as any)
+                          }}
+                          className="text-xs bg-gray-800/50 border-gray-600 hover:bg-gray-700/50 text-gray-300 hover:text-white"
                         >
-                          {suggestion}
-                        </motion.button>
+                          {question}
+                        </Button>
                       ))}
-                    </motion.div>
-                  </motion.div>
+                    </div>
+                  </div>
                 )}
 
                 {messages.map((message, index) => (
                   <motion.div
                     key={`message-${message.id || index}`}
-                    initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    transition={{ duration: 0.3 }}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
                     className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
                   >
                     <div
-                      className={`flex items-start space-x-2 md:space-x-3 max-w-[85%] ${
-                        message.role === "user" ? "flex-row-reverse space-x-reverse" : ""
-                      }`}
+                      className={`flex items-start space-x-2 max-w-[80%] ${message.role === "user" ? "flex-row-reverse space-x-reverse" : ""}`}
                     >
-                      <motion.div
-                        className={`rounded-full p-1.5 md:p-2 flex-shrink-0 ${
+                      <div
+                        className={`w-6 h-6 rounded-full flex items-center justify-center ${
                           message.role === "user"
-                            ? "bg-gradient-to-r from-blue-600 to-purple-600"
-                            : "bg-gradient-to-r from-gray-700 to-gray-800"
+                            ? "bg-gradient-to-r from-blue-500 to-purple-500"
+                            : "bg-gradient-to-r from-green-500 to-blue-500"
                         }`}
-                        whileHover={{ scale: 1.1 }}
                       >
                         {message.role === "user" ? (
-                          <User className="h-3 w-3 md:h-4 md:w-4 text-white" />
+                          <User className="w-3 h-3 text-white" />
                         ) : (
-                          <Bot className="h-3 w-3 md:h-4 md:w-4 text-blue-400" />
+                          <Bot className="w-3 h-3 text-white" />
                         )}
-                      </motion.div>
-
-                      <motion.div
-                        className={`rounded-2xl p-3 md:p-4 relative overflow-hidden ${
+                      </div>
+                      <div
+                        className={`rounded-2xl px-3 py-2 ${
                           message.role === "user"
                             ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white"
-                            : "bg-gradient-to-r from-gray-800/80 to-gray-900/80 text-gray-100 backdrop-blur-sm border border-gray-700/30"
+                            : "bg-gray-800/80 text-gray-100 border border-gray-700/50"
                         }`}
-                        whileHover={{ scale: 1.02 }}
-                        layout
                       >
-                        <div className="text-sm whitespace-pre-wrap leading-relaxed relative z-10">
-                          {message.content}
-                        </div>
-                      </motion.div>
+                        <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                      </div>
                     </div>
                   </motion.div>
                 ))}
 
                 {isLoading && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="flex justify-start"
-                  >
-                    <div className="flex items-start space-x-2 md:space-x-3 max-w-[85%]">
-                      <motion.div
-                        className="bg-gradient-to-r from-gray-700 to-gray-800 rounded-full p-1.5 md:p-2"
-                        animate={{
-                          scale: [1, 1.1, 1],
-                          rotate: [0, 360],
-                        }}
-                        transition={{
-                          scale: { duration: 1, repeat: Number.POSITIVE_INFINITY },
-                          rotate: { duration: 2, repeat: Number.POSITIVE_INFINITY, ease: "linear" },
-                        }}
-                      >
-                        <Bot className="h-3 w-3 md:h-4 md:w-4 text-blue-400" />
-                      </motion.div>
-                      <div className="bg-gradient-to-r from-gray-800/80 to-gray-900/80 backdrop-blur-sm border border-gray-700/30 rounded-2xl p-3 md:p-4">
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex justify-start">
+                    <div className="flex items-start space-x-2">
+                      <div className="w-6 h-6 rounded-full bg-gradient-to-r from-green-500 to-blue-500 flex items-center justify-center">
+                        <Bot className="w-3 h-3 text-white" />
+                      </div>
+                      <div className="bg-gray-800/80 border border-gray-700/50 rounded-2xl px-3 py-2">
                         <div className="flex space-x-1">
                           {[0, 1, 2].map((i) => (
                             <motion.div
                               key={`loading-dot-${i}`}
-                              className="w-1.5 h-1.5 md:w-2 md:h-2 bg-blue-400 rounded-full"
-                              animate={{
-                                scale: [1, 1.5, 1],
-                                opacity: [0.5, 1, 0.5],
-                              }}
-                              transition={{
-                                duration: 1,
-                                repeat: Number.POSITIVE_INFINITY,
-                                delay: i * 0.2,
-                              }}
+                              className="w-2 h-2 bg-blue-400 rounded-full"
+                              animate={{ scale: [1, 1.2, 1] }}
+                              transition={{ duration: 0.6, repeat: Number.POSITIVE_INFINITY, delay: i * 0.2 }}
                             />
                           ))}
                         </div>
@@ -264,51 +151,31 @@ export default function ChatBot({ isChatOpen, setIsChatOpen }: ChatBotProps) {
                     </div>
                   </motion.div>
                 )}
-              </AnimatePresence>
-
-              <div ref={messagesEndRef} />
-            </div>
+              </div>
+            </ScrollArea>
 
             {/* Input */}
-            <motion.div
-              className="border-t border-gray-700/50 p-3 md:p-4 bg-gradient-to-r from-gray-900/50 to-black/50 backdrop-blur-sm"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-            >
-              <form onSubmit={handleSubmit} className="flex space-x-2 md:space-x-3">
-                <div className="flex-1 relative">
-                  <Input
-                    value={input}
-                    onChange={handleInputChange}
-                    placeholder="Tanyakan tentang parfum..."
-                    className="bg-gray-800/50 border-gray-600/50 text-white placeholder-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 rounded-full px-4 py-2 md:py-3 pr-10 md:pr-12 backdrop-blur-sm text-sm md:text-base"
-                    disabled={isLoading}
-                  />
-                  {input && (
-                    <motion.div
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2"
-                    >
-                      <Sparkles className="h-3 w-3 md:h-4 md:w-4 text-blue-400" />
-                    </motion.div>
-                  )}
-                </div>
-
-                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                  <Button
-                    type="submit"
-                    disabled={isLoading || !input.trim()}
-                    className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-full p-2 md:p-3 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden"
-                  >
-                    <Send className="h-3 w-3 md:h-4 md:w-4 relative z-10" />
-                  </Button>
-                </motion.div>
+            <div className="p-4 border-t border-gray-700/50 bg-gray-900/50">
+              <form onSubmit={handleSubmit} className="flex space-x-2">
+                <Input
+                  value={input}
+                  onChange={handleInputChange}
+                  placeholder="Ask about perfumes..."
+                  className="flex-1 bg-gray-800/50 border-gray-600 text-white placeholder-gray-400 focus:border-blue-500"
+                  disabled={isLoading}
+                />
+                <Button
+                  type="submit"
+                  size="icon"
+                  disabled={isLoading || !input.trim()}
+                  className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:opacity-50"
+                >
+                  <Send className="w-4 h-4" />
+                </Button>
               </form>
-            </motion.div>
-          </div>
-        </motion.div>
+            </div>
+          </motion.div>
+        </>
       )}
     </AnimatePresence>
   )

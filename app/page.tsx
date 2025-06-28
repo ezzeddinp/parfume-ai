@@ -1,43 +1,59 @@
 "use client"
 
 import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Sparkles } from "lucide-react"
-import ChatBot from "@/components/chat-bot"
+import Header from "@/components/sections/header"
 import HeroSection from "@/components/sections/hero-section"
-import AIFeatures from "@/components/sections/ai-features"
-import FeaturedPerfumes from "@/components/sections/featured-perfumes"
-import TestimonialsSection from "@/components/sections/testimonials-section"
-import StatsSection from "@/components/sections/stats-section"
 import HorizontalProducts from "@/components/sections/horizontal-products"
+import StatsSection from "@/components/sections/stats-section"
+import FeaturedPerfumes from "@/components/sections/featured-perfumes"
+import AIFeatures from "@/components/sections/ai-features"
+import TestimonialsSection from "@/components/sections/testimonials-section"
 import Footer from "@/components/sections/footer"
+import ChatBot from "@/components/chat-bot"
+import FloatingChatButton from "@/components/ui/floating-chat-button"
+import SmokeEffect from "@/components/effects/smoke-effect"
+import FloatingBottle from "@/components/effects/floating-bottle"
 
 export default function Home() {
   const [isChatOpen, setIsChatOpen] = useState(false)
 
+  const handleChatOpen = () => {
+    setIsChatOpen(true)
+  }
+
   return (
-    <main className="min-h-screen bg-gradient-to-b from-gray-900 via-black to-gray-900">
-      <HeroSection />
-      <AIFeatures />
-      <FeaturedPerfumes />
-      <HorizontalProducts />
-      <TestimonialsSection />
-      <StatsSection />
+    <div className="min-h-screen relative overflow-hidden">
+      {/* Clean Black-Blue Gradient Background */}
+      <div className="fixed inset-0 z-0">
+        <div className="absolute inset-0 bg-gradient-to-br from-black via-gray-900 to-blue-900" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+      </div>
+
+      {/* Floating Perfume Bottle */}
+      <FloatingBottle />
+
+      {/* Smokey Effect */}
+      <SmokeEffect />
+
+      {/* Header with Mobile Sidebar */}
+      <Header onChatOpen={handleChatOpen} />
+
+      {/* Main Content */}
+      <main className="relative z-10">
+        <HeroSection onChatOpen={handleChatOpen} />
+        <HorizontalProducts />
+        <StatsSection />
+        <FeaturedPerfumes />
+        <AIFeatures />
+        <TestimonialsSection />
+      </main>
+
+      {/* Footer */}
       <Footer />
 
-      {/* Floating Chat Button */}
-      {!isChatOpen && (
-        <Button
-          onClick={() => setIsChatOpen(true)}
-          className="fixed bottom-6 right-6 h-14 w-14 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg z-50 transition-all duration-300 hover:scale-110"
-          size="icon"
-        >
-          <Sparkles className="h-6 w-6" />
-        </Button>
-      )}
-
-      {/* Chat Bot */}
+      {/* Chat Components */}
+      <FloatingChatButton isChatOpen={isChatOpen} setIsChatOpen={setIsChatOpen} />
       <ChatBot isChatOpen={isChatOpen} setIsChatOpen={setIsChatOpen} />
-    </main>
+    </div>
   )
 }
