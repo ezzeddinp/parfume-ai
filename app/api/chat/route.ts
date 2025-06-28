@@ -1,40 +1,27 @@
-import type { NextRequest } from "next/server"
-import { generateText, StreamingTextResponse } from "ai"
+import { StreamingTextResponse, generateText } from "ai"
 import { openai } from "@ai-sdk/openai"
 
-/**
- * POST /api/chat
- *
- * Body: { messages: { role: "user" | "assistant"; content: string }[] }
- *
- * The `@ai-sdk/react` `useChat` hook automatically hits this endpoint
- * and expects an SSE/text-stream (not plain JSON).  We create that stream
- * with the AI SDK helpers.
- */
-export async function POST(req: NextRequest) {
+// POST /api/chat – compatible with @ai-sdk/react `useChat`
+export async function POST(req: Request) {
   try {
-    // Parse the incoming conversation so far
-    const { messages } = await req.json()
+    const { messages = [] } = await req.json()
 
-    // Pass the history to the model (important for context!)
+    // Turn on streaming mode (✅ crucial for useChat)
     const { stream } = await generateText({
-      model: openai("gpt-4o"), // change model if desired
+      model: openai("gpt-4o"),
       messages,
+      stream: true, // <-- THIS FIXES THE 500 ERROR
       temperature: 0.7,
       maxTokens: 1024,
+      system: "You are an expert perfume consultant. Provide detailed, friendly fragrance advice tailored to the user.",
     })
 
-    // Pipe the stream straight back to the client
     return new StreamingTextResponse(stream)
   } catch (error) {
-    console.error("❌ API /api/chat error:", error)
-
-    // Respond with a non-stream error so the hook can surface details
-    return new Response(
-      JSON.stringify({
-        error: (error as Error).message ?? "Unknown error",
-      }),
-      { status: 500, headers: { "Content-Type": "application/json" } },
-    )
+    console.error("❌ /api/chat failed:", error)
+    return new Response(JSON.stringify({ error: (error as Error).message ?? "Unknown error" }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    })
   }
 }
