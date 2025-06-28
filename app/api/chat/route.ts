@@ -1,74 +1,40 @@
+import type { NextRequest } from "next/server"
+import { generateText, StreamingTextResponse } from "ai"
 import { openai } from "@ai-sdk/openai"
-import { streamText } from "ai"
 
-export const maxDuration = 30
-
-export async function POST(req: Request) {
+/**
+ * POST /api/chat
+ *
+ * Body: { messages: { role: "user" | "assistant"; content: string }[] }
+ *
+ * The `@ai-sdk/react` `useChat` hook automatically hits this endpoint
+ * and expects an SSE/text-stream (not plain JSON).  We create that stream
+ * with the AI SDK helpers.
+ */
+export async function POST(req: NextRequest) {
   try {
-    console.log("🚀 API Chat endpoint called")
-
+    // Parse the incoming conversation so far
     const { messages } = await req.json()
-    console.log("📝 Messages received:", messages)
 
-    // Check if API key exists
-    if (!process.env.OPENAI_API_KEY) {
-      console.error("❌ OPENAI_API_KEY not found")
-      return new Response(
-        JSON.stringify({
-          error: "OpenAI API key not configured",
-        }),
-        {
-          status: 500,
-          headers: { "Content-Type": "application/json" },
-        },
-      )
-    }
-
-    console.log("🔑 API Key found, calling OpenAI...")
-
-    const result = streamText({
-      model: openai("gpt-4o"),
-      system: `You are an expert perfume consultant and fragrance specialist with extensive knowledge about:
-
-- Fragrance families (floral, oriental, woody, fresh, etc.)
-- Perfume notes (top, middle, base notes)
-- Popular perfume brands and their signature scents
-- Seasonal and occasion-appropriate fragrances
-- Perfume longevity, sillage, and projection
-- Fragrance layering techniques
-- Skin chemistry and how it affects perfumes
-- Niche vs designer fragrances
-- Perfume history and trends
-
-Your role is to:
-- Provide personalized perfume recommendations based on user preferences
-- Explain fragrance compositions and note breakdowns
-- Suggest perfumes for different occasions, seasons, or moods
-- Help users understand their scent preferences
-- Educate about proper perfume application and storage
-- Compare different fragrances and brands
-- Discuss fragrance trends and new releases
-
-Always be enthusiastic, knowledgeable, and helpful. Ask follow-up questions to better understand the user's preferences when making recommendations. Keep responses conversational and engaging while being informative.`,
+    // Pass the history to the model (important for context!)
+    const { stream } = await generateText({
+      model: openai("gpt-4o"), // change model if desired
       messages,
-      onFinish: (result) => {
-        console.log("✅ AI Response completed:", result.text.slice(0, 100) + "...")
-      },
+      temperature: 0.7,
+      maxTokens: 1024,
     })
 
-    console.log("📤 Sending response stream...")
-    return result.toDataStreamResponse()
+    // Pipe the stream straight back to the client
+    return new StreamingTextResponse(stream)
   } catch (error) {
-    console.error("💥 API Error:", error)
+    console.error("❌ API /api/chat error:", error)
+
+    // Respond with a non-stream error so the hook can surface details
     return new Response(
       JSON.stringify({
-        error: "Failed to process request",
-        details: error instanceof Error ? error.message : "Unknown error",
+        error: (error as Error).message ?? "Unknown error",
       }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json" },
-      },
+      { status: 500, headers: { "Content-Type": "application/json" } },
     )
   }
 }
