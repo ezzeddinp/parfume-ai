@@ -62,7 +62,7 @@ export default function HeroSection({ onChatOpen }: HeroSectionProps) {
 
               <motion.div variants={itemVariants}>
                 <motion.h2
-                  className="text-6xl md:text-6xl lg:text-6xl font-black mb-8 leading-none"
+                  className="text-5xl md:text-4xl lg:text-6xl font-black mb-8 leading-none"
                   initial={{ scale: 0.8, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ duration: 0.8, ease: "easeOut" }}
@@ -77,11 +77,11 @@ export default function HeroSection({ onChatOpen }: HeroSectionProps) {
               </motion.div>
 
               <motion.div variants={itemVariants} className="max-w-4xl mx-auto">
-                <p className="text-xl md:text-2xl text-gray-300 mb-4 font-light leading-relaxed">
+                <p className="text-md md:text-lg text-gray-300 mb-4 font-light leading-relaxed">
                   Rasakan <span className="text-blue-400 font-semibold">masa depan fragrance</span> dengan teknologi AI
                   revolusioner kami
                 </p>
-                <p className="text-lg text-gray-400 max-w-2xl mx-auto">
+                <p className="text-md text-gray-400 max-w-2xl mx-auto">
                   Dapatkan rekomendasi personal dari koleksi 1000+ premium fragrances, dikurasi oleh AI experts
                 </p>
               </motion.div>
@@ -93,7 +93,7 @@ export default function HeroSection({ onChatOpen }: HeroSectionProps) {
                 <motion.div whileHover={{ scale: 1.05, y: -5 }} whileTap={{ scale: 0.95 }}>
                   <Button
                     onClick={onChatOpen}
-                    className="bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900 text-white px-10 py-6 text-xl font-semibold rounded-full shadow-xl border border-blue-500/20"
+                    className="bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900 text-white px-10 py-6 text-md font-semibold rounded-full shadow-xl border border-blue-500/20"
                   >
                     <Zap className="mr-3 h-6 w-6" />
                     Mulai AI Consultation

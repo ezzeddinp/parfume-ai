@@ -25,7 +25,7 @@ export default function Home() {
     <div className="min-h-screen relative overflow-hidden">
       {/* Clean Black-Blue Gradient Background */}
       <div className="fixed inset-0 z-0">
-        <div className="absolute inset-0 bg-gradient-to-br from-black via-gray-900 to-blue-900" />
+        <div className="absolute inset-0 bg-gradient-to-br from-black via-black/90 to-blue-900" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
       </div>
 
@@ -39,7 +39,7 @@ export default function Home() {
       <Header onChatOpen={handleChatOpen} />
 
       {/* Main Content */}
-      <main className="relative z-10">
+      <main className="relative">
         <HeroSection onChatOpen={handleChatOpen} />
         <HorizontalProducts />
         <StatsSection />

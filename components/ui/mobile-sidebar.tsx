@@ -106,7 +106,7 @@ export default function MobileSidebar({ onChatOpen }: MobileSidebarProps) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
-            className="fixed inset-0 z-[9998] bg-black/60 backdrop-blur-sm mobile-sidebar-overlay"
+            className="fixed inset-0 z-[10000] bg-black/60 backdrop-blur-sm mobile-sidebar-overlay"
             onClick={() => setIsOpen(false)}
           />
         )}
@@ -120,7 +120,7 @@ export default function MobileSidebar({ onChatOpen }: MobileSidebarProps) {
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className="fixed top-0 right-0 h-full w-80 z-[9999] overflow-hidden mobile-sidebar-container mobile-sidebar-content"
+            className="fixed top-0 right-0 h-full w-80 z-[9998] overflow-hidden mobile-sidebar-container mobile-sidebar-content"
           >
             {/* Sidebar Background with Gradient */}
             <div className="absolute inset-0 bg-black">
@@ -129,7 +129,7 @@ export default function MobileSidebar({ onChatOpen }: MobileSidebarProps) {
             </div>
 
             {/* Sidebar Content */}
-            <div className="relative h-full flex flex-col">
+            <div className="relative z-[9999] h-full flex flex-col">
               {/* Header */}
               <motion.div
                 initial={{ opacity: 0, y: -20 }}
@@ -327,12 +327,12 @@ export default function MobileSidebar({ onChatOpen }: MobileSidebarProps) {
             </div>
 
             {/* Decorative Elements */}
-            <div className="absolute top-20 right-4 w-32 h-32 bg-blue-600/5 rounded-full blur-3xl" />
-            <div className="absolute bottom-20 right-8 w-24 h-24 bg-blue-400/5 rounded-full blur-2xl" />
+            <div className="absolute z-[9999] top-20 right-4 w-32 h-32 bg-blue-600/5 rounded-full blur-3xl" />
+            <div className="absolute z-[9999] bottom-20 right-8 w-24 h-24 bg-blue-400/5 rounded-full blur-2xl" />
 
             {/* Animated Border */}
             <motion.div
-              className="absolute left-0 top-0 w-1 h-full bg-gradient-to-b from-transparent via-blue-500/50 to-transparent"
+              className="absolute left-0 top-0 w-1 h-full bg-gradient-to-b from-transparent via-blue-500/50 to-transparent z-50"
               initial={{ scaleY: 0 }}
               animate={{ scaleY: 1 }}
               transition={{ delay: 0.2, duration: 0.8 }}

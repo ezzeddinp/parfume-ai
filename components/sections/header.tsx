@@ -10,8 +10,8 @@ interface HeaderProps {
 
 export default function Header({ onChatOpen }: HeaderProps) {
   return (
-    <header className="fixed top-0 w-full z-40 border-b border-gray-800/30 backdrop-blur-xl bg-black/20">
-      <div className="container mx-auto px-4 py-4">
+    <header className="fixed top-0 w-full z-30 border-b border-gray-800/30 bg-black">
+      <div className="container mx-auto px-4 py-2">
         <motion.div
           className="flex items-center justify-between"
           initial={{ y: -50, opacity: 0 }}
@@ -30,7 +30,7 @@ export default function Header({ onChatOpen }: HeaderProps) {
           </motion.div>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex space-x-8">
+          <nav className="hidden md:flex space-x-8 text-sm">
             {["Home", "Fragrances", "Brands", "About", "Contact"].map((item, index) => (
               <motion.a
                 key={item}
