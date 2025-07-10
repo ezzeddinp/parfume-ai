@@ -2,13 +2,11 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
 import { useCartStore } from "@/lib/store/cart"
 import { useAuthStore } from "@/lib/store/auth"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Loader2, CreditCard, Shield } from "lucide-react"
 import { toast } from "sonner"
-import Image from "next/image"
 
 declare global {
   interface Window {
@@ -19,44 +17,39 @@ declare global {
 export default function CheckoutPage() {
   const router = useRouter()
   const { items, getTotalPrice, clearCart } = useCartStore()
-  const { user } = useAuthStore()
-  const [loading, setLoading] = useState(false)
-  const [snapLoaded, setSnapLoaded] = useState(false)
-
-  const total = getTotalPrice()
+  const { user, setShowAuthModal } = useAuthStore()
+  const [isLoading, setIsLoading] = useState(false)
 
   useEffect(() => {
-    // Redirect if not authenticated
     if (!user) {
+      setShowAuthModal(true)
+      return
+    }
+
+    if (items.length === 0) {
       router.push("/cart")
       return
     }
 
-    // Redirect if cart is empty
-    if (items.length === 0) {
-      router.push("/products")
-      return
-    }
-
-    // Load Midtrans Snap
+    // Load Midtrans Snap script
     const script = document.createElement("script")
     script.src = "https://app.sandbox.midtrans.com/snap/snap.js"
     script.setAttribute("data-client-key", process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY!)
-    script.onload = () => setSnapLoaded(true)
     document.head.appendChild(script)
 
     return () => {
       document.head.removeChild(script)
     }
-  }, [user, items.length, router])
+  }, [user, items, router, setShowAuthModal])
 
   const handlePayment = async () => {
-    if (!snapLoaded) {
-      toast.error("Payment system is loading, please wait...")
+    if (!user) {
+      setShowAuthModal(true)
       return
     }
 
-    setLoading(true)
+    setIsLoading(true)
+
     try {
       const response = await fetch("/api/checkout", {
         method: "POST",
@@ -65,152 +58,108 @@ export default function CheckoutPage() {
         },
         body: JSON.stringify({
           items,
-          total,
+          userEmail: user.email,
+          total: getTotalPrice(),
         }),
       })
 
       const data = await response.json()
 
-      if (!response.ok) {
-        throw new Error(data.error || "Checkout failed")
+      if (data.success && data.snapToken) {
+        window.snap.pay(data.snapToken, {
+          onSuccess: (result: any) => {
+            toast.success("Payment successful!")
+            clearCart()
+            router.push(`/order-success?order_id=${data.orderId}`)
+          },
+          onPending: (result: any) => {
+            toast.info("Payment pending. Please complete your payment.")
+          },
+          onError: (result: any) => {
+            toast.error("Payment failed. Please try again.")
+          },
+          onClose: () => {
+            toast.info("Payment cancelled.")
+          },
+        })
+      } else {
+        toast.error("Failed to create payment. Please try again.")
       }
-
-      // Open Midtrans Snap
-      window.snap.pay(data.token, {
-        onSuccess: (result: any) => {
-          console.log("Payment success:", result)
-          toast.success("Payment successful!")
-          clearCart()
-          router.push(`/order-success?order_id=${data.order_id}`)
-        },
-        onPending: (result: any) => {
-          console.log("Payment pending:", result)
-          toast.info("Payment is being processed...")
-          router.push(`/order-pending?order_id=${data.order_id}`)
-        },
-        onError: (result: any) => {
-          console.log("Payment error:", result)
-          toast.error("Payment failed. Please try again.")
-        },
-        onClose: () => {
-          console.log("Payment popup closed")
-          toast.info("Payment cancelled")
-        },
-      })
-    } catch (error: any) {
-      console.error("Checkout error:", error)
-      toast.error(error.message || "Checkout failed")
+    } catch (error) {
+      console.error("Payment error:", error)
+      toast.error("Payment failed. Please try again.")
     } finally {
-      setLoading(false)
+      setIsLoading(false)
     }
   }
 
-  if (!user || items.length === 0) {
-    return null
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
+        <div className="text-center text-white">
+          <h2 className="text-2xl font-bold mb-2">Please Login</h2>
+          <p className="text-slate-300">You need to login to checkout</p>
+        </div>
+      </div>
+    )
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
       <div className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold text-white mb-8">Checkout</h1>
+        <h1 className="text-4xl font-bold text-white mb-8 text-center">Checkout</h1>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Order Items */}
-          <div>
-            <Card className="bg-slate-800/50 border-purple-500/20">
-              <CardHeader>
-                <CardTitle className="text-white">Order Items</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
+        <div className="max-w-2xl mx-auto">
+          <Card className="bg-slate-800/50 border-purple-500/20 mb-6">
+            <CardContent className="p-6">
+              <h2 className="text-xl font-bold text-white mb-4">Order Summary</h2>
+
+              <div className="space-y-3 mb-6">
                 {items.map((item) => (
-                  <div key={item.id} className="flex items-center space-x-4">
-                    <div className="relative w-16 h-16 rounded-lg overflow-hidden">
-                      <Image
-                        src={item.product.image || "/placeholder.jpg"}
-                        alt={item.product.name}
-                        fill
-                        className="object-cover"
-                      />
+                  <div key={item.id} className="flex justify-between items-center text-slate-300">
+                    <div>
+                      <span className="font-medium">{item.name}</span>
+                      <span className="text-sm text-slate-400 ml-2">x{item.quantity}</span>
                     </div>
-                    <div className="flex-1">
-                      <h3 className="text-white font-medium">{item.product.name}</h3>
-                      <p className="text-slate-400 text-sm">Qty: {item.quantity}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-white font-bold">${(item.product.price * item.quantity).toFixed(2)}</p>
-                    </div>
+                    <span>${(item.price * item.quantity).toFixed(2)}</span>
                   </div>
                 ))}
-              </CardContent>
-            </Card>
-          </div>
+              </div>
 
-          {/* Payment */}
-          <div>
-            <Card className="bg-slate-800/50 border-purple-500/20">
-              <CardHeader>
-                <CardTitle className="text-white flex items-center gap-2">
-                  <Shield className="w-5 h-5 text-purple-400" />
-                  Secure Payment
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="space-y-2">
-                  <div className="flex justify-between text-slate-300">
-                    <span>Subtotal</span>
-                    <span>${total.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between text-slate-300">
-                    <span>Shipping</span>
-                    <span>Free</span>
-                  </div>
-                  <div className="border-t border-purple-500/20 pt-2">
-                    <div className="flex justify-between text-white font-bold text-lg">
-                      <span>Total</span>
-                      <span>${total.toFixed(2)}</span>
-                    </div>
-                  </div>
+              <div className="border-t border-slate-600 pt-4">
+                <div className="flex justify-between items-center text-white font-bold text-lg">
+                  <span>Total</span>
+                  <span>${getTotalPrice().toFixed(2)}</span>
                 </div>
+              </div>
+            </CardContent>
+          </Card>
 
-                <div className="bg-slate-700/30 rounded-lg p-4">
-                  <h4 className="text-white font-medium mb-2">Payment Methods Available:</h4>
-                  <ul className="text-slate-300 text-sm space-y-1">
-                    <li>• Credit/Debit Cards (Visa, Mastercard)</li>
-                    <li>• Bank Transfer</li>
-                    <li>• QRIS (Indonesia)</li>
-                    <li>• E-Wallets (GoPay, OVO, DANA)</li>
-                  </ul>
-                </div>
+          <Card className="bg-slate-800/50 border-purple-500/20">
+            <CardContent className="p-6">
+              <h2 className="text-xl font-bold text-white mb-4">Payment</h2>
 
+              <div className="mb-6">
+                <p className="text-slate-300 mb-2">Customer: {user.email}</p>
+                <p className="text-sm text-slate-400">You will be redirected to Midtrans secure payment page</p>
+              </div>
+
+              <div className="space-y-3">
                 <Button
                   onClick={handlePayment}
-                  disabled={loading || !snapLoaded}
-                  className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+                  disabled={isLoading}
+                  className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 py-3"
                 >
-                  {loading ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Processing...
-                    </>
-                  ) : !snapLoaded ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Loading Payment...
-                    </>
-                  ) : (
-                    <>
-                      <CreditCard className="w-4 h-4 mr-2" />
-                      Pay ${total.toFixed(2)}
-                    </>
-                  )}
+                  {isLoading ? "Processing..." : `Pay $${getTotalPrice().toFixed(2)}`}
                 </Button>
 
-                <p className="text-xs text-slate-400 text-center">
-                  Your payment is secured by Midtrans. We don't store your payment information.
-                </p>
-              </CardContent>
-            </Card>
-          </div>
+                <div className="text-center text-sm text-slate-400">
+                  <p>Secure payment powered by Midtrans</p>
+                  <p>Supports Credit Card, Bank Transfer, E-Wallet & more</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>
