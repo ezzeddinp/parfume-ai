@@ -1,5 +1,5 @@
 {
-  "name": "perfume-ai-ecommerce",
+  "name": "perfume-ai-chatbot",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -10,7 +10,6 @@
   },
   "dependencies": {
     "@ai-sdk/google": "latest",
-    "@ai-sdk/react": "^0.0.62",
     "@emotion/is-prop-valid": "latest",
     "@radix-ui/react-accordion": "latest",
     "@radix-ui/react-alert-dialog": "latest",
@@ -39,15 +38,12 @@
     "@radix-ui/react-toggle": "latest",
     "@radix-ui/react-toggle-group": "latest",
     "@radix-ui/react-tooltip": "latest",
-    "@supabase/ssr": "latest",
-    "@supabase/supabase-js": "latest",
     "ai": "latest",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "latest",
     "embla-carousel-react": "latest",
     "framer-motion": "latest",
-    "immer": "latest",
     "input-otp": "latest",
     "lucide-react": "^0.454.0",
     "next": "15.2.4",
@@ -61,19 +57,15 @@
     "sonner": "latest",
     "tailwind-merge": "^2.5.5",
     "tailwindcss-animate": "^1.0.7",
-    "use-sync-external-store": "latest",
     "vaul": "latest",
-
-    "zod": "latest",
-    "zustand": "latest"
-
+    "zod": "latest"
   },
   "devDependencies": {
     "@types/node": "^22",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
-    "eslint-config-next": "15.2.4",
+    "eslint-config-next": "15.1.0",
     "postcss": "^8.5",
     "tailwindcss": "^3.4.1",
     "typescript": "^5"

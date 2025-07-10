@@ -3,17 +3,12 @@ import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
-import { Toaster } from "@/components/ui/sonner"
-import { AuthProvider } from "@/components/auth/auth-provider"
-import { Header } from "@/components/layout/header"
 
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "PerfumeAI - AI-Powered Fragrance Discovery",
-  description:
-    "Discover your perfect fragrance with AI-powered recommendations. Shop premium perfumes curated just for you.",
-  keywords: "perfume, fragrance, AI, recommendations, luxury, scent, cologne",
+  title: "Perfume AI Chatbot",
+  description: "AI-powered perfume consultant and fragrance specialist",
     generator: 'v0.dev'
 }
 
@@ -25,12 +20,8 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
-        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} disableTransitionOnChange>
-          <AuthProvider>
-            <Header />
-            <main>{children}</main>
-            <Toaster />
-          </AuthProvider>
+        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
+          {children}
         </ThemeProvider>
       </body>
     </html>
