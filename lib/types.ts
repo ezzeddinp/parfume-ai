@@ -1,32 +1,36 @@
 export interface Product {
-  id: string
+  id: number
   name: string
   description: string
-  price: number
-  image: string
-  category: string
-  stock: number
-  created_at?: string
+  price_range: string
+  price?: number
+  image_url: string
+  brand_name: string
+  gender: string
+  concentration: string
+  rating: number
+  is_featured: boolean
 }
 
 export interface CartItem {
-  id: string
-  product: Product
+  id: number
+  name: string
+  price: number
+  image_url: string
+  brand_name: string
   quantity: number
-}
-
-export interface User {
-  id: string
-  email: string
-  created_at: string
 }
 
 export interface Order {
   id: string
-  user_id: string
+  user_email: string
   total: number
-  status: "pending" | "paid" | "failed" | "cancelled"
+  status: string
   items: CartItem[]
-  created_at: string
-  midtrans_order_id?: string
+  created_at?: string
+}
+
+export interface User {
+  email: string
+  name?: string
 }

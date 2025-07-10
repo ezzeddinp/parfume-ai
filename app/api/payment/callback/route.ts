@@ -1,40 +1,33 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { createClient } from "@/lib/supabase/server"
+import { updateOrderStatus } from "@/lib/database"
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
     const { order_id, transaction_status, fraud_status } = body
 
-    const supabase = await createClient()
-
-    let status = "pending"
+    let orderStatus = "pending"
 
     if (transaction_status === "capture") {
       if (fraud_status === "challenge") {
-        status = "pending"
+        orderStatus = "challenge"
       } else if (fraud_status === "accept") {
-        status = "paid"
+        orderStatus = "success"
       }
     } else if (transaction_status === "settlement") {
-      status = "paid"
+      orderStatus = "success"
     } else if (transaction_status === "cancel" || transaction_status === "deny" || transaction_status === "expire") {
-      status = "failed"
+      orderStatus = "failed"
     } else if (transaction_status === "pending") {
-      status = "pending"
+      orderStatus = "pending"
     }
 
-    // Update order status
-    const { error } = await supabase.from("orders").update({ status }).eq("midtrans_order_id", order_id)
+    // Update order status in database
+    await updateOrderStatus(order_id, orderStatus)
 
-    if (error) {
-      console.error("Order update error:", error)
-      return NextResponse.json({ error: "Failed to update order" }, { status: 500 })
-    }
-
-    return NextResponse.json({ message: "OK" })
+    return NextResponse.json({ success: true })
   } catch (error) {
     console.error("Payment callback error:", error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    return NextResponse.json({ success: false, error: "Callback processing failed" }, { status: 500 })
   }
 }

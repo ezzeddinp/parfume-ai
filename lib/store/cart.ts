@@ -1,14 +1,12 @@
-"use client"
-
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
-import type { CartItem, Product } from "@/lib/types"
+import type { CartItem } from "@/lib/types"
 
 interface CartStore {
   items: CartItem[]
-  addItem: (product: Product) => void
-  removeItem: (productId: string) => void
-  updateQuantity: (productId: string, quantity: number) => void
+  addItem: (item: Omit<CartItem, "quantity">) => void
+  removeItem: (id: number) => void
+  updateQuantity: (id: number, quantity: number) => void
   clearCart: () => void
   getTotalPrice: () => number
   getTotalItems: () => number
@@ -19,44 +17,44 @@ export const useCartStore = create<CartStore>()(
     (set, get) => ({
       items: [],
 
-      addItem: (product: Product) => {
+      addItem: (item) => {
         const items = get().items
-        const existingItem = items.find((item) => item.product.id === product.id)
+        const existingItem = items.find((i) => i.id === item.id)
 
         if (existingItem) {
           set({
-            items: items.map((item) =>
-              item.product.id === product.id ? { ...item, quantity: item.quantity + 1 } : item,
-            ),
+            items: items.map((i) => (i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i)),
           })
         } else {
           set({
-            items: [...items, { id: product.id, product, quantity: 1 }],
+            items: [...items, { ...item, quantity: 1 }],
           })
         }
       },
 
-      removeItem: (productId: string) => {
+      removeItem: (id) => {
         set({
-          items: get().items.filter((item) => item.product.id !== productId),
+          items: get().items.filter((item) => item.id !== id),
         })
       },
 
-      updateQuantity: (productId: string, quantity: number) => {
+      updateQuantity: (id, quantity) => {
         if (quantity <= 0) {
-          get().removeItem(productId)
+          get().removeItem(id)
           return
         }
 
         set({
-          items: get().items.map((item) => (item.product.id === productId ? { ...item, quantity } : item)),
+          items: get().items.map((item) => (item.id === id ? { ...item, quantity } : item)),
         })
       },
 
-      clearCart: () => set({ items: [] }),
+      clearCart: () => {
+        set({ items: [] })
+      },
 
       getTotalPrice: () => {
-        return get().items.reduce((total, item) => total + item.product.price * item.quantity, 0)
+        return get().items.reduce((total, item) => total + item.price * item.quantity, 0)
       },
 
       getTotalItems: () => {

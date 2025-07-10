@@ -11,7 +11,7 @@ const inter = Inter({ subsets: ["latin"] })
 export const metadata: Metadata = {
   title: "PerfumeAI - AI-Powered Fragrance Discovery",
   description: "Discover your perfect fragrance with AI-powered recommendations",
-    generator: 'v0.dev'
+  generator: "v0.dev",
 }
 
 export default function RootLayout({
