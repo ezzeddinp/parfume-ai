@@ -1,61 +1,30 @@
-import { neon } from "@neondatabase/serverless"
-
-const sql = neon(process.env.DATABASE_URL!)
-
-export interface Product {
-  id: number
-  name: string
-  description: string
-  price_range: string
-  image_url: string
-  brand_name: string
-  gender: string
-  concentration: string
-  rating: number
-  is_featured: boolean
-}
-
-export interface CartItem {
-  id: number
-  name: string
-  price: number
-  image_url: string
-  quantity: number
-}
-
-export interface Order {
-  id: string
-  user_email: string
-  total: number
-  status: string
-  items: CartItem[]
-  created_at: string
-}
+import { createClient } from "./supabase/client"
+import type { Product, Order } from "./types"
 
 export async function getProducts(): Promise<Product[]> {
-  try {
-    const result = await sql`
-      SELECT 
-        p.id,
-        p.name,
-        p.description,
-        p.price_range,
-        p.image_url,
-        b.name as brand_name,
-        p.gender,
-        p.concentration,
-        p.rating,
-        p.is_featured
-      FROM perfumes p
-      LEFT JOIN brands b ON p.brand_id = b.id
-      ORDER BY p.is_featured DESC, p.rating DESC
-      LIMIT 50
-    `
+  const supabase = createClient()
 
-    return result.map((row) => ({
-      ...row,
-      rating: Number(row.rating) || 0,
-    }))
+  try {
+    const { data, error } = await supabase
+      .from("perfumes")
+      .select(`
+        *,
+        brands!inner(name)
+      `)
+      .order("is_featured", { ascending: false })
+      .order("rating", { ascending: false })
+      .limit(50)
+
+    if (error) throw error
+
+    return (
+      data?.map((item) => ({
+        ...item,
+        brand_name: item.brands?.name || "Unknown Brand",
+        price: item.price || getPriceFromRange(item.price_range),
+        rating: Number(item.rating) || 0,
+      })) || []
+    )
   } catch (error) {
     console.error("Error fetching products:", error)
     return []
@@ -63,42 +32,76 @@ export async function getProducts(): Promise<Product[]> {
 }
 
 export async function getFeaturedProducts(): Promise<Product[]> {
-  try {
-    const result = await sql`
-      SELECT 
-        p.id,
-        p.name,
-        p.description,
-        p.price_range,
-        p.image_url,
-        b.name as brand_name,
-        p.gender,
-        p.concentration,
-        p.rating,
-        p.is_featured
-      FROM perfumes p
-      LEFT JOIN brands b ON p.brand_id = b.id
-      WHERE p.is_featured = true
-      ORDER BY p.rating DESC
-      LIMIT 12
-    `
+  const supabase = createClient()
 
-    return result.map((row) => ({
-      ...row,
-      rating: Number(row.rating) || 0,
-    }))
+  try {
+    const { data, error } = await supabase
+      .from("perfumes")
+      .select(`
+        *,
+        brands!inner(name)
+      `)
+      .eq("is_featured", true)
+      .order("rating", { ascending: false })
+      .limit(8)
+
+    if (error) throw error
+
+    return (
+      data?.map((item) => ({
+        ...item,
+        brand_name: item.brands?.name || "Unknown Brand",
+        price: item.price || getPriceFromRange(item.price_range),
+        rating: Number(item.rating) || 0,
+      })) || []
+    )
   } catch (error) {
     console.error("Error fetching featured products:", error)
     return []
   }
 }
 
-export async function createOrder(order: Omit<Order, "created_at">): Promise<boolean> {
+export async function getProductById(id: number): Promise<Product | null> {
+  const supabase = createClient()
+
   try {
-    await sql`
-      INSERT INTO orders (id, user_email, total, status, items)
-      VALUES (${order.id}, ${order.user_email}, ${order.total}, ${order.status}, ${JSON.stringify(order.items)})
-    `
+    const { data, error } = await supabase
+      .from("perfumes")
+      .select(`
+        *,
+        brands!inner(name)
+      `)
+      .eq("id", id)
+      .single()
+
+    if (error) throw error
+
+    return {
+      ...data,
+      brand_name: data.brands?.name || "Unknown Brand",
+      price: data.price || getPriceFromRange(data.price_range),
+      rating: Number(data.rating) || 0,
+    }
+  } catch (error) {
+    console.error("Error fetching product:", error)
+    return null
+  }
+}
+
+export async function createOrder(order: Omit<Order, "created_at">): Promise<boolean> {
+  const supabase = createClient()
+
+  try {
+    const { error } = await supabase.from("orders").insert({
+      id: order.id,
+      user_email: order.user_email,
+      total: order.total,
+      status: order.status,
+      items: order.items,
+      midtrans_order_id: order.midtrans_order_id,
+    })
+
+    if (error) throw error
     return true
   } catch (error) {
     console.error("Error creating order:", error)
@@ -107,15 +110,44 @@ export async function createOrder(order: Omit<Order, "created_at">): Promise<boo
 }
 
 export async function updateOrderStatus(orderId: string, status: string): Promise<boolean> {
+  const supabase = createClient()
+
   try {
-    await sql`
-      UPDATE orders 
-      SET status = ${status}
-      WHERE id = ${orderId}
-    `
+    const { error } = await supabase.from("orders").update({ status }).eq("id", orderId)
+
+    if (error) throw error
     return true
   } catch (error) {
     console.error("Error updating order status:", error)
     return false
+  }
+}
+
+export async function getOrderById(orderId: string): Promise<Order | null> {
+  const supabase = createClient()
+
+  try {
+    const { data, error } = await supabase.from("orders").select("*").eq("id", orderId).single()
+
+    if (error) throw error
+    return data
+  } catch (error) {
+    console.error("Error fetching order:", error)
+    return null
+  }
+}
+
+function getPriceFromRange(priceRange: string): number {
+  switch (priceRange) {
+    case "Budget":
+      return 29.99
+    case "Mid-range":
+      return 79.99
+    case "Luxury":
+      return 149.99
+    case "Niche":
+      return 249.99
+    default:
+      return 99.99
   }
 }

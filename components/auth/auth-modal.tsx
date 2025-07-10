@@ -1,165 +1,225 @@
 "use client"
 
-import { useState } from "react"
+import type React from "react"
+
+import { useState, useEffect } from "react"
+import { createClient } from "@/lib/supabase/client"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
-import { useAuthStore } from "@/lib/store/auth"
 import { toast } from "sonner"
+import { Loader2, Mail, Shield } from "lucide-react"
 
-export function AuthModal() {
-  const { showAuthModal, setShowAuthModal, setUser, rememberMe, setRememberMe } = useAuthStore()
+interface AuthModalProps {
+  isOpen: boolean
+  onClose: () => void
+  onSuccess?: () => void
+}
+
+export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
+  const [step, setStep] = useState<"email" | "otp">("email")
   const [email, setEmail] = useState("")
   const [otp, setOtp] = useState("")
-  const [step, setStep] = useState<"email" | "otp">("email")
-  const [isLoading, setIsLoading] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [rememberMe, setRememberMe] = useState(false)
+  const supabase = createClient()
 
-  const handleSendOTP = async () => {
-    if (!email) {
-      toast.error("Please enter your email")
-      return
+  useEffect(() => {
+    if (!isOpen) {
+      setStep("email")
+      setEmail("")
+      setOtp("")
+      setLoading(false)
     }
+  }, [isOpen])
 
-    setIsLoading(true)
+  const handleSendOTP = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!email) return
 
-    // Simulate OTP sending (replace with actual implementation)
+    setLoading(true)
     try {
-      // In real implementation, you would call your OTP service here
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          shouldCreateUser: true,
+        },
+      })
+
+      if (error) throw error
 
       setStep("otp")
       toast.success("OTP sent to your email!")
-    } catch (error) {
-      toast.error("Failed to send OTP")
+    } catch (error: any) {
+      toast.error(error.message || "Failed to send OTP")
     } finally {
-      setIsLoading(false)
+      setLoading(false)
     }
   }
 
-  const handleVerifyOTP = async () => {
-    if (!otp || otp.length !== 6) {
-      toast.error("Please enter a valid 6-digit OTP")
-      return
-    }
+  const handleVerifyOTP = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!email || !otp) return
 
-    setIsLoading(true)
-
+    setLoading(true)
     try {
-      // Simulate OTP verification (replace with actual implementation)
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+      const { error } = await supabase.auth.verifyOtp({
+        email,
+        token: otp,
+        type: "email",
+      })
 
-      // For demo purposes, accept any 6-digit code
-      if (otp.length === 6) {
-        const user = { email, name: email.split("@")[0] }
-        setUser(user)
-        setShowAuthModal(false)
-        toast.success("Successfully logged in!")
+      if (error) throw error
 
-        // Reset form
-        setEmail("")
-        setOtp("")
-        setStep("email")
-      } else {
-        toast.error("Invalid OTP")
-      }
-    } catch (error) {
-      toast.error("Failed to verify OTP")
+      toast.success("Successfully logged in!")
+      onClose()
+      onSuccess?.()
+    } catch (error: any) {
+      toast.error(error.message || "Invalid OTP")
     } finally {
-      setIsLoading(false)
+      setLoading(false)
     }
   }
 
-  const handleClose = () => {
-    setShowAuthModal(false)
-    setStep("email")
-    setEmail("")
-    setOtp("")
+  const handleResendOTP = async () => {
+    setLoading(true)
+    try {
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          shouldCreateUser: true,
+        },
+      })
+
+      if (error) throw error
+      toast.success("New OTP sent!")
+    } catch (error: any) {
+      toast.error(error.message || "Failed to resend OTP")
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
-    <Dialog open={showAuthModal} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md bg-slate-900 border-purple-500/20">
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-md bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 border-purple-500/20">
         <DialogHeader>
-          <DialogTitle className="text-white text-center">
-            {step === "email" ? "Sign In / Sign Up" : "Verify OTP"}
+          <DialogTitle className="text-center text-white flex items-center justify-center gap-2">
+            <Shield className="w-5 h-5 text-purple-400" />
+            {step === "email" ? "Sign In" : "Verify Email"}
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4">
-          {step === "email" ? (
-            <>
-              <div className="space-y-2">
-                <Label htmlFor="email" className="text-white">
-                  Email
-                </Label>
+        {step === "email" ? (
+          <form onSubmit={handleSendOTP} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email" className="text-white">
+                Email Address
+              </Label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-3 w-4 h-4 text-purple-400" />
                 <Input
                   id="email"
                   type="email"
                   placeholder="Enter your email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="bg-slate-800 border-slate-700 text-white"
+                  className="pl-10 bg-slate-800/50 border-purple-500/30 text-white placeholder:text-slate-400"
+                  required
                 />
               </div>
+            </div>
 
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="remember"
-                  checked={rememberMe}
-                  onCheckedChange={(checked) => setRememberMe(checked as boolean)}
-                />
-                <Label htmlFor="remember" className="text-sm text-slate-300">
-                  Remember me for 30 days
-                </Label>
-              </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="remember"
+                checked={rememberMe}
+                onCheckedChange={(checked) => setRememberMe(checked as boolean)}
+                className="border-purple-500/30"
+              />
+              <Label htmlFor="remember" className="text-sm text-slate-300">
+                Remember me for 30 days
+              </Label>
+            </div>
 
+            <Button
+              type="submit"
+              disabled={loading || !email}
+              className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Sending OTP...
+                </>
+              ) : (
+                "Send OTP Code"
+              )}
+            </Button>
+
+            <p className="text-xs text-slate-400 text-center">We'll send a 6-digit code to verify your email</p>
+          </form>
+        ) : (
+          <form onSubmit={handleVerifyOTP} className="space-y-4">
+            <div className="text-center">
+              <p className="text-slate-300 text-sm mb-4">Enter the 6-digit code sent to:</p>
+              <p className="text-purple-400 font-medium">{email}</p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="otp" className="text-white">
+                Verification Code
+              </Label>
+              <Input
+                id="otp"
+                type="text"
+                placeholder="000000"
+                value={otp}
+                onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                className="text-center text-2xl tracking-widest bg-slate-800/50 border-purple-500/30 text-white"
+                maxLength={6}
+                required
+              />
+            </div>
+
+            <Button
+              type="submit"
+              disabled={loading || otp.length !== 6}
+              className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Verifying...
+                </>
+              ) : (
+                "Verify & Sign In"
+              )}
+            </Button>
+
+            <div className="flex justify-between text-sm">
               <Button
-                onClick={handleSendOTP}
-                disabled={isLoading}
-                className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+                type="button"
+                variant="ghost"
+                onClick={() => setStep("email")}
+                className="text-slate-400 hover:text-white p-0 h-auto"
               >
-                {isLoading ? "Sending..." : "Send OTP"}
+                ← Change Email
               </Button>
-            </>
-          ) : (
-            <>
-              <div className="space-y-2">
-                <Label htmlFor="otp" className="text-white">
-                  Enter 6-digit OTP
-                </Label>
-                <Input
-                  id="otp"
-                  type="text"
-                  placeholder="000000"
-                  value={otp}
-                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                  className="bg-slate-800 border-slate-700 text-white text-center text-2xl tracking-widest"
-                  maxLength={6}
-                />
-                <p className="text-sm text-slate-400 text-center">OTP sent to {email}</p>
-              </div>
-
-              <div className="flex space-x-2">
-                <Button
-                  variant="outline"
-                  onClick={() => setStep("email")}
-                  className="flex-1 border-slate-700 text-slate-300 hover:bg-slate-800"
-                >
-                  Back
-                </Button>
-                <Button
-                  onClick={handleVerifyOTP}
-                  disabled={isLoading}
-                  className="flex-1 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
-                >
-                  {isLoading ? "Verifying..." : "Verify"}
-                </Button>
-              </div>
-            </>
-          )}
-        </div>
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={handleResendOTP}
+                disabled={loading}
+                className="text-purple-400 hover:text-purple-300 p-0 h-auto"
+              >
+                Resend Code
+              </Button>
+            </div>
+          </form>
+        )}
       </DialogContent>
     </Dialog>
   )

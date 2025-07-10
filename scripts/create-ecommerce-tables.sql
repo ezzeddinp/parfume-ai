@@ -18,11 +18,11 @@ CREATE INDEX IF NOT EXISTS idx_orders_created_at ON orders(created_at);
 DO $$ 
 BEGIN
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'perfumes' AND column_name = 'price') THEN
-        ALTER TABLE perfumes ADD COLUMN price DECIMAL(10,2) DEFAULT 99.99;
+        ALTER TABLE perfumes ADD COLUMN price DECIMAL(10,2);
     END IF;
 END $$;
 
--- Update some perfumes with actual prices based on price_range
+-- Update perfumes with prices based on price_range
 UPDATE perfumes SET price = 
   CASE 
     WHEN price_range = 'Budget' THEN 29.99
@@ -31,4 +31,7 @@ UPDATE perfumes SET price =
     WHEN price_range = 'Niche' THEN 249.99
     ELSE 99.99
   END
-WHERE price IS NULL OR price = 99.99;
+WHERE price IS NULL;
+
+-- Make sure some perfumes are featured for testing
+UPDATE perfumes SET is_featured = true WHERE rating >= 4.5 LIMIT 8;
