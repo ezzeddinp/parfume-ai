@@ -1,18 +1,18 @@
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
-import type { CartItem } from "@/lib/types"
+import type { CartItem } from "../types"
 
-interface CartStore {
+interface CartState {
   items: CartItem[]
   addItem: (item: Omit<CartItem, "quantity">) => void
   removeItem: (id: number) => void
   updateQuantity: (id: number, quantity: number) => void
   clearCart: () => void
-  getTotalPrice: () => number
   getTotalItems: () => number
+  getTotalPrice: () => number
 }
 
-export const useCartStore = create<CartStore>()(
+export const useCartStore = create<CartState>()(
   persist(
     (set, get) => ({
       items: [],
@@ -53,12 +53,12 @@ export const useCartStore = create<CartStore>()(
         set({ items: [] })
       },
 
-      getTotalPrice: () => {
-        return get().items.reduce((total, item) => total + item.price * item.quantity, 0)
-      },
-
       getTotalItems: () => {
         return get().items.reduce((total, item) => total + item.quantity, 0)
+      },
+
+      getTotalPrice: () => {
+        return get().items.reduce((total, item) => total + item.price * item.quantity, 0)
       },
     }),
     {

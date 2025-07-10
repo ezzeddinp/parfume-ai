@@ -1,40 +1,20 @@
 import { create } from "zustand"
-import { persist } from "zustand/middleware"
-import type { User } from "@/lib/types"
+import type { User } from "@supabase/supabase-js"
 
 interface AuthStore {
   user: User | null
-  isLoading: boolean
+  loading: boolean
   showAuthModal: boolean
-  rememberMe: boolean
   setUser: (user: User | null) => void
   setLoading: (loading: boolean) => void
   setShowAuthModal: (show: boolean) => void
-  setRememberMe: (remember: boolean) => void
-  logout: () => void
 }
 
-export const useAuthStore = create<AuthStore>()(
-  persist(
-    (set) => ({
-      user: null,
-      isLoading: true,
-      showAuthModal: false,
-      rememberMe: false,
-
-      setUser: (user) => set({ user, isLoading: false }),
-      setLoading: (isLoading) => set({ isLoading }),
-      setShowAuthModal: (showAuthModal) => set({ showAuthModal }),
-      setRememberMe: (rememberMe) => set({ rememberMe }),
-
-      logout: () => set({ user: null, showAuthModal: false }),
-    }),
-    {
-      name: "auth-storage",
-      partialize: (state) => ({
-        user: state.user,
-        rememberMe: state.rememberMe,
-      }),
-    },
-  ),
-)
+export const useAuthStore = create<AuthStore>((set) => ({
+  user: null,
+  loading: true,
+  showAuthModal: false,
+  setUser: (user) => set({ user }),
+  setLoading: (loading) => set({ loading }),
+  setShowAuthModal: (showAuthModal) => set({ showAuthModal }),
+}))

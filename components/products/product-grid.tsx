@@ -4,6 +4,7 @@ import Image from "next/image"
 import { Star, ShoppingCart } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
 import { useCartStore } from "@/lib/store/cart"
 import { useAuthStore } from "@/lib/store/auth"
 import { toast } from "sonner"
@@ -17,38 +18,29 @@ export function ProductGrid({ products }: ProductGridProps) {
   const { addItem } = useCartStore()
   const { user, setShowAuthModal } = useAuthStore()
 
-  const getPriceFromRange = (priceRange: string): number => {
-    switch (priceRange) {
-      case "Budget":
-        return 29.99
-      case "Mid-range":
-        return 79.99
-      case "Luxury":
-        return 149.99
-      case "Niche":
-        return 249.99
-      default:
-        return 99.99
-    }
-  }
-
   const handleAddToCart = (product: Product) => {
     if (!user) {
       setShowAuthModal(true)
       return
     }
 
-    const price = product.price || getPriceFromRange(product.price_range)
-
     addItem({
       id: product.id,
       name: product.name,
-      price,
+      price: product.price,
       image_url: product.image_url || "/placeholder.jpg",
-      brand_name: product.brand_name,
+      brand_name: product.brand_name || "Unknown Brand",
     })
 
     toast.success(`${product.name} added to cart!`)
+  }
+
+  if (products.length === 0) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-slate-400 text-lg">No products available at the moment.</p>
+      </div>
+    )
   }
 
   return (
@@ -67,9 +59,7 @@ export function ProductGrid({ products }: ProductGridProps) {
                 className="object-cover group-hover:scale-105 transition-transform duration-300"
               />
               {product.is_featured && (
-                <div className="absolute top-2 right-2 bg-purple-600 text-white text-xs px-2 py-1 rounded">
-                  Featured
-                </div>
+                <Badge className="absolute top-2 right-2 bg-purple-600 text-white">Featured</Badge>
               )}
             </div>
 
@@ -90,9 +80,7 @@ export function ProductGrid({ products }: ProductGridProps) {
 
               <div className="flex items-center justify-between pt-2">
                 <div>
-                  <span className="text-lg font-bold text-white">
-                    ${product.price || getPriceFromRange(product.price_range)}
-                  </span>
+                  <span className="text-lg font-bold text-white">${product.price}</span>
                   <span className="text-xs text-slate-400 ml-1">({product.price_range})</span>
                 </div>
 

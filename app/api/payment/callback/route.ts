@@ -10,12 +10,12 @@ export async function POST(request: NextRequest) {
 
     if (transaction_status === "capture") {
       if (fraud_status === "challenge") {
-        orderStatus = "challenge"
+        orderStatus = "pending"
       } else if (fraud_status === "accept") {
-        orderStatus = "success"
+        orderStatus = "completed"
       }
     } else if (transaction_status === "settlement") {
-      orderStatus = "success"
+      orderStatus = "completed"
     } else if (transaction_status === "cancel" || transaction_status === "deny" || transaction_status === "expire") {
       orderStatus = "failed"
     } else if (transaction_status === "pending") {
@@ -23,7 +23,11 @@ export async function POST(request: NextRequest) {
     }
 
     // Update order status in database
-    await updateOrderStatus(order_id, orderStatus)
+    const updated = await updateOrderStatus(order_id, orderStatus)
+
+    if (!updated) {
+      throw new Error("Failed to update order status")
+    }
 
     return NextResponse.json({ success: true })
   } catch (error) {

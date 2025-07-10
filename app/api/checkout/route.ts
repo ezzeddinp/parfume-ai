@@ -1,10 +1,21 @@
 import { type NextRequest, NextResponse } from "next/server"
+import { createClient } from "@/lib/supabase/server"
 import { createOrder } from "@/lib/database"
 
 export async function POST(request: NextRequest) {
   try {
+    const supabase = await createClient()
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser()
+
+    if (authError || !user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
     const body = await request.json()
-    const { items, userEmail, total } = body
+    const { items, total } = body
 
     // Generate order ID
     const orderId = `ORDER-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
@@ -14,17 +25,22 @@ export async function POST(request: NextRequest) {
       orderId,
       amount: total,
       items,
-      customerEmail: userEmail,
+      customerEmail: user.email!,
     })
 
     // Save order to database
-    await createOrder({
+    const orderSaved = await createOrder({
       id: orderId,
-      user_email: userEmail,
+      user_email: user.email!,
       total,
       status: "pending",
       items,
+      midtrans_order_id: orderId,
     })
+
+    if (!orderSaved) {
+      throw new Error("Failed to save order")
+    }
 
     return NextResponse.json({
       success: true,
@@ -61,6 +77,7 @@ async function createSnapToken(params: {
     })),
     customer_details: {
       email: customerEmail,
+      first_name: customerEmail.split("@")[0],
     },
   }
 

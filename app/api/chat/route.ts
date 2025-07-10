@@ -1,30 +1,37 @@
-import { streamText } from "ai"
+import { generateText } from "ai"
 import { google } from "@ai-sdk/google"
+import { type NextRequest, NextResponse } from "next/server"
 
-export async function POST(req: Request) {
+export async function POST(request: NextRequest) {
   try {
-    const { messages } = await req.json()
+    const { messages } = await request.json()
+    const lastMessage = messages[messages.length - 1]
 
-    const result = streamText({
+    const result = await generateText({
       model: google("gemini-1.5-flash"),
-      messages,
-      system: `You are a perfume AI expert and consultant. You help users discover and learn about fragrances, perfumes, and scents. 
+      messages: [
+        {
+          role: "system",
+          content: `You are a professional perfume consultant and fragrance expert. You help customers discover their perfect fragrance based on their preferences, personality, and lifestyle. 
 
-Your expertise includes:
-- Fragrance families and notes (top, middle, base)
-- Perfume recommendations based on preferences
-- Brand knowledge and comparisons
-- Seasonal and occasion-appropriate scents
-- Fragrance longevity and sillage
-- Price ranges and value recommendations
+Key guidelines:
+- Be knowledgeable about different fragrance families, notes, and brands
+- Ask relevant questions to understand customer preferences
+- Provide personalized recommendations
+- Explain fragrance characteristics in an accessible way
+- Be enthusiastic but professional
+- Keep responses concise and helpful
 
-Always be helpful, knowledgeable, and enthusiastic about fragrances. Provide detailed but accessible explanations. When recommending perfumes, consider the user's preferences, budget, and intended use.`,
+Always respond in a friendly, expert manner as if you're a luxury perfume consultant.`,
+        },
+        ...messages,
+      ],
       stream: true,
     })
 
     return result.toDataStreamResponse()
   } catch (error) {
     console.error("Chat API error:", error)
-    return new Response("Internal Server Error", { status: 500 })
+    return NextResponse.json({ error: "Failed to process chat request" }, { status: 500 })
   }
 }
