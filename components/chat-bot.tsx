@@ -99,6 +99,8 @@ export default function ChatBot({ isChatOpen, setIsChatOpen }: ChatBotProps) {
                     key={`message-${message.id || index}`}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
+                    // ini logika layout text user ada di kanan
+                    // sdangkan aiNya ada dikiri
                     className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
                   >
                     <div

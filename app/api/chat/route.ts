@@ -8,7 +8,7 @@ export async function POST(req: Request) {
     const { messages } = await req.json();
     console.log("📝 Messages received:", messages);
 
-    // ✅ Validate presence of Gemini API key
+    // Validate presence of Gemini API key
     const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
     if (!apiKey) {
       console.error("❌ GOOGLE_GENERATIVE_AI_API_KEY not found");
@@ -52,6 +52,7 @@ Important:
 - If you want to emphasize something, use natural language instead.
 - Keep responses conversational, friendly, and natural.
 `,
+      // 0-1: makin tinggi Jawaban akan lebih variatif, kreatif, kadang lebih “liar”.
       temperature: 0.7,
       maxTokens: 1000,
     });
