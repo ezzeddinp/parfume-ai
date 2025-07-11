@@ -5,13 +5,18 @@ import { motion, useInView } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Heart, Sparkles, ChevronLeft, ChevronRight } from "lucide-react"
 import { useAutoSlide } from "@/hooks/use-auto-slide"
+import { useSession } from "@supabase/auth-helpers-react"
+import { supabase } from "@/utils/supabase/client"
+import { useRouter } from "next/navigation"
+
+
 
 const horizontalProducts = [
   {
     id: 1,
     name: "Urban Legend",
     brand: "Metropolitan",
-    price: "Rp 850.000",
+    price: "Rp 1.000",
     image: "/placeholder.svg?height=200&width=150",
     description: "Bold and contemporary scent for the modern urbanite",
     recommendation: "Perfect untuk young professionals dan city dwellers",
@@ -80,6 +85,47 @@ export default function HorizontalProducts() {
     interval: 3000,
     enabled: horizontalInView,
   })
+const router = useRouter()
+
+const handleCheckout = async (product: any) => {
+  const { data } = await supabase.auth.getSession()
+
+  if (!data.session) {
+    router.push("/login")
+    return
+  }
+
+  try {
+    const res = await fetch("/api/payment", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify([{
+        id: product.id,
+        name: product.name,
+        price: parseInt(product.price.replace(/\D/g, "")),
+        quantity: 1,
+      }]),
+    })
+
+    const { token } = await res.json()
+
+    if (window.snap && token) {
+      window.snap.pay(token, {
+        onSuccess: (result) => console.log("SUCCESS", result),
+        onPending: (result) => console.log("PENDING", result),
+        onError: (result) => console.log("ERROR", result),
+        onClose: () => console.log("CLOSED BY USER"),
+      })
+      
+    } else {
+      alert("Snap not loaded or token missing")
+    }
+  } catch (err) {
+    console.error("Checkout failed:", err)
+  }
+}
+
+
 
   return (
     <section ref={horizontalRef} className="py-24 px-4 relative z-10">
@@ -176,8 +222,8 @@ export default function HorizontalProducts() {
                       {product.price}
                     </span>
                     <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                      <Button className="bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900 text-white rounded-full px-6 py-2 text-sm font-semibold">
-                        Add to Cart
+                      <Button onClick={() => handleCheckout(product)} className="bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900 text-white rounded-full px-6 py-2 text-sm font-semibold">
+                        Checkout
                       </Button>
                     </motion.div>
                   </div>

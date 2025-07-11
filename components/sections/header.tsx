@@ -1,14 +1,34 @@
 "use client"
 
+import { logout } from "@/app/(auth)/actions"
+import { useEffect, useState, useTransition } from "react"
 import { motion } from "framer-motion"
 import { Sparkles } from "lucide-react"
+import Link from "next/link"
 import MobileSidebar from "@/components/ui/mobile-sidebar"
+import { supabase } from "@/utils/supabase/client"
 
-interface HeaderProps {
-  onChatOpen?: () => void
-}
+export default function Header({ onChatOpen }: { onChatOpen?: () => void }) {
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [isPending, startTransition] = useTransition()
 
-export default function Header({ onChatOpen }: HeaderProps) {
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data } = await supabase.auth.getSession()
+      setIsLoggedIn(!!data.session)
+    }
+
+    checkSession()
+
+    const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
+      setIsLoggedIn(!!session)
+    })
+
+    return () => {
+      listener?.subscription.unsubscribe()
+    }
+  }, [])
+
   return (
     <header className="fixed top-0 w-full z-30 border-b border-gray-800/30 bg-black">
       <div className="container mx-auto px-4 py-2">
@@ -18,6 +38,7 @@ export default function Header({ onChatOpen }: HeaderProps) {
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.6, ease: "easeOut" }}
         >
+          {/* Logo */}
           <motion.div
             className="flex items-center space-x-3"
             whileHover={{ scale: 1.05 }}
@@ -29,8 +50,8 @@ export default function Header({ onChatOpen }: HeaderProps) {
             </h1>
           </motion.div>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex space-x-8 text-sm">
+          {/* Nav + Auth Button */}
+          <nav className="hidden md:flex items-center space-x-8 text-sm">
             {["Home", "Fragrances", "Brands", "About", "Contact"].map((item, index) => (
               <motion.a
                 key={item}
@@ -49,9 +70,36 @@ export default function Header({ onChatOpen }: HeaderProps) {
                 />
               </motion.a>
             ))}
+
+            {isLoggedIn ? (
+              <motion.button
+                onClick={() =>
+                  startTransition(async () => {
+                    await logout()
+                    window.location.href = "/"
+                  })
+                }
+                disabled={isPending}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.98 }}
+                className="bg-red-900 hover:bg-red-800 text-white font-semibold px-4 py-1.5 rounded-xl shadow-md hover:shadow-red-500/40 transition duration-300 text-sm"
+              >
+                Logout
+              </motion.button>
+            ) : (
+              <Link href="/login">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="bg-gradient-to-r from-blue-500 to-blue-700 text-white font-semibold px-4 py-1.5 rounded-xl shadow-md hover:shadow-blue-500/40 transition duration-300 text-sm"
+                >
+                  Login
+                </motion.button>
+              </Link>
+            )}
           </nav>
 
-          {/* Mobile Sidebar */}
+          {/* Mobile Menu */}
           <MobileSidebar onChatOpen={onChatOpen} />
         </motion.div>
       </div>
