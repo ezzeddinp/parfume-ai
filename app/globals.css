@@ -68,6 +68,7 @@
   }
 }
 
+
 /* Custom Scrollbar */
 .custom-scrollbar::-webkit-scrollbar {
   width: 6px;
@@ -211,3 +212,4 @@ html {
     z-index: 9997 !important;
   }
 }
+

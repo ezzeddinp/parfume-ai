@@ -23,20 +23,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen relative overflow-hidden">
-      {/* Clean Black-Blue Gradient Background */}
-      <div className="fixed inset-0 z-0">
-        <div className="absolute inset-0 bg-gradient-to-br from-black via-black/90 to-blue-900" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-      </div>
 
-      {/* Floating Perfume Bottle */}
-      <FloatingBottle />
-
-      {/* Smokey Effect */}
-      <SmokeEffect />
-
-      {/* Header with Mobile Sidebar */}
-      <Header onChatOpen={handleChatOpen} />
 
       {/* Main Content */}
       <main className="relative">
@@ -47,9 +34,6 @@ export default function Home() {
         <AIFeatures />
         <TestimonialsSection />
       </main>
-
-      {/* Footer */}
-      <Footer />
 
       {/* Chat Components */}
       <FloatingChatButton isChatOpen={isChatOpen} setIsChatOpen={setIsChatOpen} />

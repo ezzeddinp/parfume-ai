@@ -3,6 +3,10 @@ import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
+import Header from "@/components/sections/header"
+import SmokeEffect from "@/components/effects/smoke-effect"
+import FloatingBottle from "@/components/effects/floating-bottle"
+import Footer from "@/components/sections/footer"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -19,13 +23,26 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-       <script
-    src="https://app.sandbox.midtrans.com/snap/snap.js"
-    data-client-key={process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY}
-  ></script>
       <body className={inter.className}>
+        
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
+                {/* Clean Black-Blue Gradient Background */}
+                <div className="fixed inset-0 -z-10">
+                  <div className="absolute inset-0 bg-gradient-to-br from-black via-black/90 to-blue-900" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                </div>
+          
+  
+          
+                {/* Smokey Effect */}
+                <SmokeEffect />
+          
+                {/* Header with Mobile Sidebar */}
+                <Header/>
           {children}
+          
+       
+                <Footer />
         </ThemeProvider>
       </body>
     </html>
