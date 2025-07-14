@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
     const itemDetails = items.map((item: any) => ({
       id: item.id,
       name: item.name,
-      price: _.ceil(parseFloat(item.price.toString())),
+      price: _.ceil(Number(item.price)),
       quantity: item.quantity,
     }));
 
@@ -65,17 +65,21 @@ export async function POST(req: NextRequest) {
     };
 
     // Prepare transaction parameters
-    const parameter = {
+    const transactionParams = {
       transaction_details: {
         order_id: `ORDER-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
         gross_amount: grossAmount,
       },
       item_details: itemDetails,
       customer_details: customerDetails,
+        metadata: {
+          user_id: customer.user_id,   
+          items: items,             
+        },
     };
 
     // Create transaction token
-    const token = await snap.createTransactionToken(parameter);
+    const token = await snap.createTransactionToken(transactionParams);
 
     return NextResponse.json({ token });
   } catch (error) {

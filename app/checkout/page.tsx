@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import Image from "next/image"
 import Link from "next/link"
+import { supabase } from "@/utils/supabase/client"
 
 export default function CheckoutPage() {
   const [cartItems, setCartItems] = useState<any[]>([])
@@ -34,6 +35,7 @@ export default function CheckoutPage() {
     if (checkoutItems) {
       setCartItems(JSON.parse(checkoutItems))
     }
+    console.log("data yg dikirim ke payment",checkoutItems);
 
     // Load Midtrans Snap
     const clientKey = process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY
@@ -66,77 +68,133 @@ export default function CheckoutPage() {
     setFormData((prev) => ({ ...prev, [field]: value }))
   }
 
-  const handlePayment = async () => {
-    // Validation
-    const requiredFields = ["firstName", "lastName", "email", "phone", "address", "city", "postalCode", "province"]
-    const missingFields = requiredFields.filter((field) => !formData[field as keyof typeof formData]?.trim())
+  const isSnapReady = () => typeof window !== "undefined" && (window as any).snap
 
-    if (missingFields.length > 0) {
-      alert(`Please fill in: ${missingFields.join(", ")}`)
-      return
-    }
+const validateForm = () => {
+  const required = ["firstName", "lastName", "email", "phone", "address", "city", "postalCode", "province"]
+  const missing = required.filter((key) => !formData[key as keyof typeof formData]?.trim())
+  return missing
+}
 
-    if (cartItems.length === 0) {
-      alert("Your cart is empty!")
-      return
-    }
+const handlePayment = async () => {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-    setIsLoading(true)
-
-    try {
-      const response = await fetch("/api/payment", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          items: cartItems,
-          customer: formData,
-        }),
-      })
-
-      const responseData = await response.json()
-
-      if (!response.ok) {
-        throw new Error(responseData.error || `HTTP ${response.status}`)
-      }
-
-      const { token } = responseData
-
-      if (!token) {
-        throw new Error("No payment token received")
-      }
-
-      if (typeof window !== "undefined" && (window as any).snap) {
-        (window as any).snap.pay(token, {
-          onSuccess: (result: any) => {
-            console.log("Payment success:", result)
-            localStorage.removeItem("checkoutItems")
-            window.location.href = `/success?orderId=${result.order_id}&status=success`
-          },
-          onPending: (result: any) => {
-            console.log("Payment pending:", result)
-            window.location.href = `/payment/pending?orderId=${result.order_id}&status=pending`
-          },
-          onError: (result: any) => {
-            console.log("Payment error:", result)
-            window.location.href = `/payment/error?orderId=${result.order_id}&error=${encodeURIComponent(JSON.stringify(result))}`
-          },
-          onClose: () => {
-            console.log("Payment popup closed by user")
-            alert("Pembayaran dibatalkan.")
-          },
-        })
-      } else {
-        throw new Error("Midtrans Snap not loaded")
-      }
-    } catch (error) {
-      console.error("Payment error:", error)
-      alert(`Payment failed: ${error instanceof Error ? error.message : "Unknown error"}`)
-    } finally {
-      setIsLoading(false)
-    }
+  if (!user) {
+    window.location.href = "/login";
+    return;
   }
+
+  if (!isSnapReady()) {
+    alert("Midtrans belum siap, mohon tunggu sebentar...");
+    return;
+  }
+
+  if (cartItems.length === 0) {
+    alert("Keranjang belanja kamu kosong.");
+    return;
+  }
+
+  const missingFields = validateForm();
+  if (missingFields.length > 0) {
+    alert(`Harap isi semua kolom wajib: ${missingFields.join(", ")}`);
+    return;
+  }
+
+  setIsLoading(true);
+
+  try {
+    const res = await fetch("/api/payment", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        items: cartItems,
+        customer: formData,
+      }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok || !data?.token) {
+      throw new Error(data?.error || "Token pembayaran tidak tersedia.");
+    }
+
+    const snap = (window as any).snap;
+
+    snap.pay(data.token, {
+      onSuccess: async (result: any) => {
+        console.log("✅ Sukses:", result);
+        localStorage.removeItem("checkoutItems");
+
+        // Step 1: Insert transaksi
+        const { data: trxData, error: trxError } = await supabase
+          .from("transactions")
+          .insert({
+            order_id: result.order_id,
+            user_id: user.id,
+            product_id: cartItems[0]?.id || null, // ambil product pertama aja
+            price: cartItems[0]?.price || null,
+            status: result.transaction_status,
+            total_amount: result.gross_amount,
+            order_items: cartItems,
+          })
+          .select("id") // Ambil ID buat insert ke detail
+          .single();
+
+        if (trxError) {
+          console.error("❌ Gagal insert transaksi:", trxError);
+          return;
+        }
+
+        const transaction_id = trxData.id;
+
+        // Step 2: Insert detail transaksi
+        const { error: detailError } = await supabase
+          .from("transaction_details")
+          .insert({
+            transaction_id,
+            email: formData.email,
+            customer_name: `${formData.firstName} ${formData.lastName}`,
+            address: formData.address,
+            city: formData.city,
+            province: formData.province,
+            postal_code: formData.postalCode,
+            phone: formData.phone,
+            notes: formData.notes,
+          });
+
+        if (detailError) {
+          console.error("❌ Gagal insert detail transaksi:", detailError);
+        }
+
+        // Redirect
+        window.location.href = `/success/${result.order_id}?status=success`;
+      },
+
+      onPending: (result: any) => {
+        console.log("🕒 Pending:", result);
+        window.location.href = `/payment/pending?orderId=${result.order_id}&status=pending`;
+      },
+
+      onError: (result: any) => {
+        console.error("❌ Error:", result);
+        window.location.href = `/payment/error?orderId=${result.order_id}&error=${encodeURIComponent(JSON.stringify(result))}`;
+      },
+
+      onClose: () => {
+        alert("Pembayaran dibatalkan oleh pengguna.");
+      },
+    });
+  } catch (err: any) {
+    console.error("🛑 Payment error:", err);
+    alert(`Gagal melakukan pembayaran: ${err.message || "Unknown error"}`);
+  } finally {
+    setIsLoading(false);
+  }
+};
+
+
 
   if (cartItems.length === 0) {
     return (

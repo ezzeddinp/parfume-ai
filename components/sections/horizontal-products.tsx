@@ -131,7 +131,7 @@ export default function HorizontalProducts() {
                           {product.customerType}
                         </span>
                       </div>
-                      <p className="text-gray-300 text-sm italic">"{product.recommendations}"</p>
+                      <p className="text-gray-300 text-sm italic">"{product.recommendation}"</p>
                     </div>
 
                     <div className="flex items-center justify-between">

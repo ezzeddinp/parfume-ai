@@ -12,6 +12,7 @@ const nextConfig = {
   experimental: {
     serverActions: {}, // ✅ BUKAN true
   },
+  allowedDevOrigins: ["75199441e09a.ngrok-free.app"],
   async headers() {
     return [
       {
@@ -25,6 +26,6 @@ const nextConfig = {
       },
     ];
   },
-}
+};
 
-export default nextConfig
+export default nextConfig;

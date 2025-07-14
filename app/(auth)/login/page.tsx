@@ -1,7 +1,6 @@
 'use client'
 
 import { login } from '@/app/(auth)/actions'
-import { Eye, EyeOff } from 'lucide-react'
 import { useState, useTransition } from 'react'
 
 export default function LoginPage() {
