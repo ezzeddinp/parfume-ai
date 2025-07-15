@@ -199,7 +199,7 @@ const handlePayment = async () => {
         }
 
         // Redirect
-        window.location.href = `/success/${result.order_id}?status=success`;
+        window.location.href = `/success`;
       },
 
       onPending: (result: any) => {

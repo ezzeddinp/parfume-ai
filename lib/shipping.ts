@@ -11,3 +11,4 @@ const allowedShippingRates: Record<string, number> = {
 export function getShippingCostByProvince(province: string): number {
   return allowedShippingRates[province] ?? 50000;
 }
+ 
