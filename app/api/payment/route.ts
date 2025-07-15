@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Midtrans from "midtrans-client";
 import _ from "lodash";
+import { getShippingCostByProvince } from "@/lib/shipping";
 
 let snap = new Midtrans.Snap({
   isProduction: false,
@@ -10,30 +11,60 @@ let snap = new Midtrans.Snap({
 
 export async function POST(req: NextRequest) {
   try {
-    const { items, customer } = await req.json();
+    const { items, customer, total } = await req.json();
 
     // Validate input
     if (!items || items.length === 0) {
-      return NextResponse.json({ error: "Items data not found" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Items data not found" },
+        { status: 400 }
+      );
     }
     if (!customer) {
-      return NextResponse.json({ error: "Customer data not found" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Customer data not found" },
+        { status: 400 }
+      );
     }
 
     // Map items to Midtrans format
     const itemDetails = items.map((item: any) => ({
       id: item.id,
       name: item.name,
-      price: _.ceil(Number(item.price)),
-      quantity: item.quantity,
+      price: Number(item.price),
+      quantity: Number(item.quantity),
     }));
 
+    // Tambahkan ongkir dari provinsi
+    const validatedShipping = getShippingCostByProvince(customer.province);
+
+
+    itemDetails.push({
+      id: "ONGKIR",
+      name: "Biaya Pengiriman",
+      price: validatedShipping,
+      quantity: 1,
+    });
+
+    if (!total || total <= 0) {
+      return NextResponse.json(
+        { error: "Total amount is invalid" },
+        { status: 400 }
+      );
+    }
+
     // Calculate gross amount
-    const grossAmount = _.sumBy(itemDetails, (item) => item.price * item.quantity);
+    const grossAmount = _.sumBy(
+      itemDetails,
+      (item: any) => item.price * item.quantity
+    );
 
     // Validate gross amount
     if (grossAmount <= 0) {
-      return NextResponse.json({ error: "Invalid gross amount" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid gross amount" },
+        { status: 400 }
+      );
     }
 
     // Prepare customer details
@@ -72,10 +103,10 @@ export async function POST(req: NextRequest) {
       },
       item_details: itemDetails,
       customer_details: customerDetails,
-        metadata: {
-          user_id: customer.user_id,   
-          items: items,             
-        },
+      metadata: {
+        user_id: customer.user_id,
+        items: items,
+      },
     };
 
     // Create transaction token
@@ -85,7 +116,12 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     console.error("Error creating transaction:", error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Failed to create transaction" },
+      {
+        error:
+          error instanceof Error
+            ? error.message
+            : "Failed to create transaction",
+      },
       { status: 500 }
     );
   }

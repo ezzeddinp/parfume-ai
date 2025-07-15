@@ -12,7 +12,7 @@ const nextConfig = {
   experimental: {
     serverActions: {}, // ✅ BUKAN true
   },
-  allowedDevOrigins: ["75199441e09a.ngrok-free.app"],
+  allowedDevOrigins: ["f4d84b433e15.ngrok-free.app"],
   async headers() {
     return [
       {

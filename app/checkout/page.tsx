@@ -16,6 +16,8 @@ import { supabase } from "@/utils/supabase/client"
 
 export default function CheckoutPage() {
   const [cartItems, setCartItems] = useState<any[]>([])
+  const [shipping, setShipping] = useState(0);
+
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -60,8 +62,30 @@ export default function CheckoutPage() {
     }
   }, [])
 
+  useEffect(() => {
+  const fetchShippingCost = async () => {
+    if (!formData.province) return;
+
+    try {
+      const res = await fetch("/api/shipping-cost", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ province: formData.province }),
+      });
+
+      const data = await res.json();
+      setShipping(data.shippingCost);
+    } catch (err) {
+      console.error("Gagal ambil ongkir:", err);
+      setShipping(50000); // fallback
+    }
+  };
+
+  fetchShippingCost();
+}, [formData.province]);
+
+
   const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
-  const shipping = 50000
   const total = subtotal + shipping
 
   const handleInputChange = (field: string, value: string) => {
@@ -110,10 +134,15 @@ const handlePayment = async () => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         items: cartItems,
-        customer: formData,
+        customer: {
+          ...formData,
+          shippingCost: shipping
+        },
+        total: total
       }),
     });
 
+    
     const data = await res.json();
 
     if (!res.ok || !data?.token) {
@@ -121,6 +150,7 @@ const handlePayment = async () => {
     }
 
     const snap = (window as any).snap;
+    
 
     snap.pay(data.token, {
       onSuccess: async (result: any) => {
@@ -136,7 +166,7 @@ const handlePayment = async () => {
             product_id: cartItems[0]?.id || null, // ambil product pertama aja
             price: cartItems[0]?.price || null,
             status: result.transaction_status,
-            total_amount: result.gross_amount,
+            total_amount: total,
             order_items: cartItems,
           })
           .select("id") // Ambil ID buat insert ke detail
@@ -345,11 +375,11 @@ const handlePayment = async () => {
                           <SelectValue placeholder="Pilih Provinsi" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="jakarta">DKI Jakarta</SelectItem>
-                          <SelectItem value="jabar">Jawa Barat</SelectItem>
-                          <SelectItem value="jateng">Jawa Tengah</SelectItem>
-                          <SelectItem value="jatim">Jawa Timur</SelectItem>
-                          <SelectItem value="bali">Bali</SelectItem>
+                          <SelectItem value="DKI Jakarta">DKI Jakarta</SelectItem>
+                          <SelectItem value="Jawa Barat">Jawa Barat</SelectItem>
+                          <SelectItem value="Jawa Tengah">Jawa Tengah</SelectItem>
+                          <SelectItem value="Jawa Timur">Jawa Timur</SelectItem>
+                          <SelectItem value="Bali">Bali</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import crypto from "crypto";
+import { z } from "zod";
 
 // Supabase init
 const supabase = createClient(
@@ -8,19 +9,48 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
+// Define schema with zod
+const WebhookPayloadSchema = z.object({
+  order_id: z.string(),
+  status_code: z.string(),
+  gross_amount: z.string(),
+  transaction_status: z.string(),
+  fraud_status: z.string().optional(),
+  metadata: z.object({
+    user_id: z.string(),
+    items: z.array(
+      z.object({
+        id: z.string(),
+        price: z.number(),
+        name: z.string().optional(),
+        quantity: z.number().optional(),
+      })
+    ),
+  }),
+});
+
 export async function POST(req: NextRequest) {
   try {
     const signatureKey = req.headers.get("x-callback-signature") || "";
     const body = await req.json();
+
+    // Type check using Zod
+    const parsed = WebhookPayloadSchema.safeParse(body);
+    if (!parsed.success) {
+      console.error("Invalid payload:", parsed.error.flatten());
+      return NextResponse.json({ error: "Invalid payload format" }, { status: 400 });
+    }
 
     const {
       order_id,
       status_code,
       gross_amount,
       transaction_status,
+      fraud_status,
       metadata,
-    } = body;
+    } = parsed.data;
 
+    // Signature verification
     const expectedSignature = crypto
       .createHash("sha512")
       .update(order_id + status_code + gross_amount + process.env.MIDTRANS_SERVER_KEY!)
@@ -30,35 +60,58 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: "Invalid signature" }, { status: 403 });
     }
 
-    // Cek metadata & user_id
-    if (!metadata?.user_id || !Array.isArray(metadata?.items)) {
-      return NextResponse.json({ error: "Missing metadata or user ID" }, { status: 400 });
+    // Check duplicate order_id
+    const { data: existing, error: findError } = await supabase
+      .from("transactions")
+      .select("order_id")
+      .eq("order_id", order_id)
+      .single();
+
+    if (existing) {
+      return NextResponse.json({ message: "Order already exists" }, { status: 200 }); // Still respond 200 to Midtrans
     }
 
-    // Ambil salah satu product_id dari items (asumsi minimal 1 produk)
-    const firstItem = metadata.items[0];
-    const product_id = firstItem?.id || null;
-    const price = firstItem?.price || null;
+    // Determine transaction outcome
+    let status: "success" | "pending" | "failed" = "pending";
 
-    // Insert ke tabel transactions
-    const { error } = await supabase.from("transactions").insert({
-      order_id: order_id,
+    if (
+      transaction_status === "settlement" ||
+      (transaction_status === "capture" && fraud_status === "accept")
+    ) {
+      status = "success";
+    } else if (["cancel", "deny", "expire"].includes(transaction_status)) {
+      status = "failed";
+    }
+
+    const firstItem = metadata.items[0];
+
+    // Insert into transactions
+    const { error: insertError } = await supabase.from("transactions").insert({
+      order_id,
       user_id: metadata.user_id,
-      product_id: product_id,
-      price: price,
-      status: transaction_status,
+      product_id: firstItem.id,
+      price: firstItem.price,
+      status,
       total_amount: gross_amount,
-      order_items: metadata.items, // JSON array of all items
+      order_items: metadata.items,
     });
 
-    if (error) {
-      console.error("Supabase insert error:", error.message);
+    if (insertError) {
+      console.error("Insert error:", insertError.message);
       return NextResponse.json({ error: "Failed to store transaction" }, { status: 500 });
     }
 
-    return NextResponse.json({ message: "Transaction stored successfully" });
+    // Optional: Insert raw webhook payload into logs table
+    await supabase.from("webhook_logs").insert({
+      source: "midtrans",
+      order_id,
+      payload: body,
+      received_at: new Date().toISOString(),
+    });
+
+    return NextResponse.json({ message: "OK" }); // Always 200 to Midtrans
   } catch (err) {
-    console.error("Webhook error:", err);
-    return NextResponse.json({ error: "Webhook failed" }, { status: 500 });
+    console.error("Unhandled webhook error:", err);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
