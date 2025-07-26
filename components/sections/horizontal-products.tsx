@@ -131,12 +131,12 @@ export default function HorizontalProducts() {
                           {product.customerType}
                         </span>
                       </div>
-                      <p className="text-gray-300 text-sm italic">"{product.recommendation}"</p>
+                      <p className="text-gray-300 text-sm italic">{product.recommendations}</p>
                     </div>
 
                     <div className="flex items-center justify-between">
                       <span className="text-xl font-black bg-gradient-to-r from-white to-blue-300 bg-clip-text text-transparent">
-                        Rp. {product.price}
+                        Rp. {product.price.toLocaleString('id-ID')}
                       </span>
                       <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                         <Button

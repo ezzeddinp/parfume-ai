@@ -62,7 +62,7 @@ export default function HeroSection({ onChatOpen }: HeroSectionProps) {
 
               <motion.div variants={itemVariants}>
                 <motion.h2
-                  className="text-5xl md:text-4xl lg:text-6xl font-black mb-8 leading-none"
+                  className="text-5xl md:text-4xl lg:text-8xl font-black mb-8 leading-none"
                   initial={{ scale: 0.8, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ duration: 0.8, ease: "easeOut" }}
@@ -77,7 +77,7 @@ export default function HeroSection({ onChatOpen }: HeroSectionProps) {
               </motion.div>
 
               <motion.div variants={itemVariants} className="max-w-4xl mx-auto">
-                <p className="text-md md:text-lg text-gray-300 mb-4 font-light leading-relaxed">
+                <p className="text-md md:text-md text-gray-300 mb-4 font-light leading-relaxed">
                   Rasakan <span className="text-blue-400 font-semibold">masa depan fragrance</span> dengan teknologi AI
                   revolusioner kami
                 </p>

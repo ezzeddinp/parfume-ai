@@ -251,7 +251,7 @@ const handlePayment = async () => {
         </motion.div>
 
         {/* Safety Warning */}
-        <Card className="bg-red-900/30 border-red-700 rounded-xl mb-6">
+        {/* <Card className="bg-red-900/30 border-red-700 rounded-xl mb-6">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <AlertTriangle className="h-6 w-6 text-red-400" />
@@ -266,7 +266,7 @@ const handlePayment = async () => {
               </div>
             </div>
           </CardContent>
-        </Card>
+        </Card> */}
 
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
           {/* Checkout Form */}
@@ -460,7 +460,6 @@ const handlePayment = async () => {
                     <span>Total:</span>
                     <span>Rp {total.toLocaleString("id-ID")}</span>
                   </div>
-                  <div className="text-center text-yellow-400 text-sm mt-2">⚠️ Jumlah tes: Rp 10,000</div>
                 </div>
               </CardContent>
             </Card>
@@ -482,7 +481,7 @@ const handlePayment = async () => {
                   className="w-full bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900 text-white rounded-full text-lg py-3"
                 >
                   <CreditCard className="mr-2 h-5 w-5" />
-                  {isLoading ? "Memproses..." : "Bayar dengan Midtrans (Sandbox)"}
+                  {isLoading ? "Memproses..." : "Bayar"}
                 </Button>
                 <p className="text-center text-gray-400 text-sm mt-4">🧪 Pembayaran sandbox - Aman untuk pengujian</p>
                 <div className="flex justify-center space-x-2 mt-2">

@@ -45,17 +45,17 @@ export default function Header({ onChatOpen }: { onChatOpen?: () => void }) {
             transition={{ type: "spring", stiffness: 400 }}
           >
             <Sparkles className="h-8 w-8 text-blue-400" />
-            <h1 className="text-xl font-bold bg-gradient-to-r from-white to-blue-400 bg-clip-text text-transparent">
+            <a href="/" className="text-xl cursor-pointer font-bold bg-gradient-to-r from-white to-blue-400 bg-clip-text text-transparent">
               PerfumeAI
-            </h1>
+            </a>
           </motion.div>
 
           {/* Nav + Auth Button */}
           <nav className="hidden md:flex items-center space-x-8 text-sm">
-            {["Home", "Fragrances", "Brands", "About", "Contact"].map((item, index) => (
+            {["Home", "Fragrances", "Brands", "About", "Contact", "Order History"].map((item, index) => (
               <motion.a
                 key={item}
-                href="#"
+                href="/history-order"
                 className="text-gray-300 hover:text-blue-400 transition-all duration-300 relative group font-medium"
                 initial={{ y: -20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
